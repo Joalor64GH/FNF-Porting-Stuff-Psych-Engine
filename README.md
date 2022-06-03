@@ -25,14 +25,12 @@ On This Line
 ```xml
 	<!--Mobile-specific-->
 	<window if="mobile" orientation="landscape" fullscreen="true" width="0" height="0" resizable="false"/>
-
 ```
 
 Replace It With
 ```xml
 	<!--Mobile-specific-->
 	<window if="mobile" orientation="landscape" fullscreen="true" width="1280" height="720" resizable="false" allow-shaders="true" require-shaders="true"/>
-
 ```
 
 On Those Lines
@@ -43,7 +41,6 @@ On Those Lines
 	<define name="ACHIEVEMENTS_ALLOWED" />
 	<define name="VIDEOS_ALLOWED" if="web || windows" unless="32bits"/>
 	<define name="PSYCH_WATERMARKS"/> <!-- DELETE THIS TO REMOVE WATERMARKS ON TITLE SCREEN -->
-
 ```
 
 Replace It With
@@ -54,7 +51,17 @@ Replace It With
 	<define name="ACHIEVEMENTS_ALLOWED" />
 	<define name="VIDEOS_ALLOWED" if="web || windows || android" unless="32bits"/>
 	<define name="PSYCH_WATERMARKS"/> <!-- DELETE THIS TO REMOVE WATERMARKS ON TITLE SCREEN -->
+```
 
+Before Those Lines
+```xml
+	<assets path="assets/preload" rename="assets" exclude="*.ogg" if="web"/>
+	<assets path="assets/preload" rename="assets" exclude="*.mp3"  unless="web"/>
+```
+
+add
+```xml
+	<assets path="assets/preload/images/android" if="android"/> <!-- to not have the android assets in another builds -saw -->
 ```
 
 Than, After the Libraries, or where the packeges are located
@@ -62,24 +69,21 @@ Than, After the Libraries, or where the packeges are located
 	<haxelib name="faxe" if='switch'/>
 	<!--<haxelib name="polymod"/> -->
 	<haxelib name="discord_rpc" if="desktop"/>
-
 ```
 add
 ```xml
         <haxelib name="extension-videoview" if="android"/>
         <haxelib name="extension-androidtools" if="android"/>
-
 ```
 
 The last thing Before
 ```xml
 	<!-- _________________________________ Custom _______________________________ -->
-
 ```
 add
 ```xml
-        <!-- make's game use less ram -->
-        <haxedef name="HXCPP_GC_BIG_BLOCKS"/>
+	<!-- make's game use less ram -->
+	<haxedef name="HXCPP_GC_BIG_BLOCKS"/>
 
 	<!-- Akways enable Null Object Reference check -->
 	<haxedef name="HXCPP_CHECK_POINTER" if="release" />
@@ -99,18 +103,16 @@ after those lines
 ```haxe
 import flixel.input.actions.FlxActionSet;
 import flixel.input.keyboard.FlxKey;
-
 ```
 add
 
 ```haxe
 #if android
 import flixel.group.FlxGroup;
-import android.FlxHitbox;
-import android.FlxVirtualPad;
 import android.flixel.FlxButton;
+import android.flixel.FlxHitbox;
+import android.flixel.FlxVirtualPad;
 #end
-
 ```
 
 before those lines
@@ -390,7 +392,7 @@ in the lines you import things add
 #if android
 import flixel.input.actions.FlxActionInput;
 import android.AndroidControls.AndroidControls;
-import android.FlxVirtualPad;
+import android.flixel.FlxVirtualPad;
 #end
 ```
 
@@ -428,7 +430,7 @@ add
 
 	#if android
 	public function addAndroidControls() {
-        androidc = new AndroidControls();
+		androidc = new AndroidControls();
 
 		switch (androidc.mode)
 		{
@@ -454,6 +456,24 @@ add
 		add(androidc);
 	}
 	#end
+
+	#if android
+	public function addPadCamera() {
+		var camcontrol = new flixel.FlxCamera();
+		FlxG.cameras.add(camcontrol);
+		camcontrol.bgColor.alpha = 0;
+		_virtualpad.cameras = [camcontrol];
+	}
+	#end
+	
+	override function destroy() {
+		#if android
+		controls.removeFlxInput(trackedinputsNOTES);
+		controls.removeFlxInput(trackedinputsUI);
+		#end	
+		
+		super.destroy();
+	}
 ```
 
 6. Setup MusicBeatSubstate.hx
@@ -462,7 +482,7 @@ in the lines you import things add
 ```haxe
 #if android
 import flixel.input.actions.FlxActionInput;
-import android.FlxVirtualPad;
+import android.flixel.FlxVirtualPad;
 #end
 ```
 
@@ -497,7 +517,7 @@ add
 	#end
 
 	#if android
-        public function addPadCamera() {
+	public function addPadCamera() {
 		var camcontrol = new flixel.FlxCamera();
 		FlxG.cameras.add(camcontrol);
 		camcontrol.bgColor.alpha = 0;
@@ -619,7 +639,7 @@ SUtil.saveContent("your file name", ".txt", "lololol");
 13. Do an action when you press on the screen
 ```haxe
 		#if android
-                var justTouched:Bool = false;
+		var justTouched:Bool = false;
 
 		for (touch in FlxG.touches.list)
 		{
@@ -630,10 +650,10 @@ SUtil.saveContent("your file name", ".txt", "lololol");
 		}
 		#end
 
-                if (controls.ACCEPT #if android || justTouched #end)
-                {
-                        //Will do something
-                }
+		if (controls.ACCEPT #if android || justTouched #end)
+		{
+			//Will do something
+		}
 ```
 
 ## Credits:
