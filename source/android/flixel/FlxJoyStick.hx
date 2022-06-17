@@ -2,6 +2,7 @@ package android.flixel;
 
 import flixel.FlxG;
 import flixel.FlxSprite;
+import flixel.graphics.FlxGraphic;
 import flixel.group.FlxSpriteGroup;
 import flixel.input.touch.FlxTouch;
 import flixel.math.FlxAngle;
@@ -28,7 +29,7 @@ class FlxJoyStick extends FlxSpriteGroup
 	public var onOver:Void->Void;
 	public var onPressed:Void->Void;
 
-	static var _analogs:Array<FlxJoyStick> = [];
+	static var _joysticks:Array<FlxJoyStick> = [];
 
 	var _currentTouch:FlxTouch;
 	var _tempTouches:Array<FlxTouch> = [];
@@ -45,7 +46,7 @@ class FlxJoyStick extends FlxSpriteGroup
 		_radius = radius;
 		_ease = FlxMath.bound(ease, 0, 60 / FlxG.updateFramerate);
 
-		_analogs.push(this);
+		_joysticks.push(this);
 
 		_point = FlxPoint.get();
 
@@ -62,11 +63,10 @@ class FlxJoyStick extends FlxSpriteGroup
 	function createBase():Void
 	{
 		base = new FlxSprite(0, 0);
-		base.frames = getFrames();
-		base.animation.frameName = 'base';
+		base.loadGraphic(FlxGraphic.fromFrame(getFrames().getByName('base')));
 		base.resetSizeFromFrame();
-		base.x += -base.width * 0.5;
-		base.y += -base.height * 0.5;
+		base.x += -base.width * 1.5;
+		base.y += -base.height * 1.5;
 		base.scrollFactor.set();
 		base.solid = false;
 		#if FLX_DEBUG
@@ -78,8 +78,7 @@ class FlxJoyStick extends FlxSpriteGroup
 	function createThumb():Void
 	{
 		thumb = new FlxSprite(0, 0);
-		thumb.frames = getFrames();
-		thumb.animation.frameName = 'thumb';
+		thumb.loadGraphic(FlxGraphic.fromFrame(getFrames().getByName('thumb')));
 		thumb.resetSizeFromFrame();
 		thumb.scrollFactor.set();
 		thumb.solid = false;
@@ -91,13 +90,13 @@ class FlxJoyStick extends FlxSpriteGroup
 
 	public static function getFrames():FlxAtlasFrames
 	{
-		return Paths.getPackerAtlas('android/joystick');
+		return Paths.getSparrowAtlas('android/joystick');
 	}
 
 	function createZone():Void
 	{
 		if (base != null && _radius == 0)
-			_radius = base.width * 0.5;
+			_radius = base.width * 1.5;
 
 		_zone.set(x - _radius, y - _radius, 2 * _radius, 2 * _radius);
 	}
@@ -108,7 +107,7 @@ class FlxJoyStick extends FlxSpriteGroup
 
 		_zone = FlxDestroyUtil.put(_zone);
 
-		_analogs.remove(this);
+		_joysticks.remove(this);
 		onUp = null;
 		onDown = null;
 		onOver = null;
@@ -124,22 +123,20 @@ class FlxJoyStick extends FlxSpriteGroup
 	{
 		var offAll:Bool = true;
 
-		// There is no reason to get into the loop if their is already a pointer on the analog
+		// There is no reason to get into the loop if their is already a pointer on the joystick
 		if (_currentTouch != null)
-		{
 			_tempTouches.push(_currentTouch);
-		}
 		else
 		{
 			for (touch in FlxG.touches.list)
 			{
 				var touchInserted:Bool = false;
 
-				for (analog in _analogs)
+				for (joystick in _joysticks)
 				{
-					// Check whether the pointer is already taken by another analog.
-					// TODO: check this place. This line was 'if (analog != this && analog._currentTouch != touch && touchInserted == false)'
-					if (analog == this && analog._currentTouch != touch && !touchInserted)
+					// Check whether the pointer is already taken by another joystick.
+					// TODO: check this place. This line was 'if (joystick != this && joystick._currentTouch != touch && touchInserted == false)'
+					if (joystick == this && joystick._currentTouch != touch && !touchInserted)
 					{
 						_tempTouches.push(touch);
 						touchInserted = true;
@@ -152,7 +149,7 @@ class FlxJoyStick extends FlxSpriteGroup
 		{
 			_point = touch.getWorldPosition(FlxG.camera, _point);
 
-			if (!updateAnalog(_point, touch.pressed, touch.justPressed, touch.justReleased, touch))
+			if (!updatejoystick(_point, touch.pressed, touch.justPressed, touch.justReleased, touch))
 			{
 				offAll = false;
 				break;
@@ -170,20 +167,18 @@ class FlxJoyStick extends FlxSpriteGroup
 			}
 		}
 
-		thumb.x = x + Math.cos(_direction) * _amount * _radius - (thumb.width * 0.5);
-		thumb.y = y + Math.sin(_direction) * _amount * _radius - (thumb.height * 0.5);
+		thumb.x = x + Math.cos(_direction) * _amount * _radius - (thumb.width * 1.5);
+		thumb.y = y + Math.sin(_direction) * _amount * _radius - (thumb.height * 1.5);
 
 		if (offAll)
-		{
 			status = NORMAL;
-		}
 
 		_tempTouches.splice(0, _tempTouches.length);
 
 		super.update(elapsed);
 	}
 
-	function updateAnalog(TouchPoint:FlxPoint, Pressed:Bool, JustPressed:Bool, JustReleased:Bool, ?Touch:FlxTouch):Bool
+	function updatejoystick(TouchPoint:FlxPoint, Pressed:Bool, JustPressed:Bool, JustReleased:Bool, ?Touch:FlxTouch):Bool
 	{
 		var offAll:Bool = true;
 
@@ -191,9 +186,7 @@ class FlxJoyStick extends FlxSpriteGroup
 		// the screen coordinates passed in touchPoint are wrong
 		// if the control is used in a group, for example.
 		if (Touch != null)
-		{
 			TouchPoint.set(Touch.screenX, Touch.screenY);
-		}
 
 		if (_zone.containsPoint(TouchPoint) || (status == PRESSED))
 		{
@@ -202,25 +195,18 @@ class FlxJoyStick extends FlxSpriteGroup
 			if (Pressed)
 			{
 				if (Touch != null)
-				{
 					_currentTouch = Touch;
-				}
+
 				status = PRESSED;
 
 				if (JustPressed)
-				{
 					if (onDown != null)
-					{
 						onDown();
-					}
-				}
 
 				if (status == PRESSED)
 				{
 					if (onPressed != null)
-					{
 						onPressed();
-					}
 
 					var dx:Float = TouchPoint.x - x;
 					var dy:Float = TouchPoint.y - y;
@@ -228,9 +214,7 @@ class FlxJoyStick extends FlxSpriteGroup
 					var dist:Float = Math.sqrt(dx * dx + dy * dy);
 
 					if (dist < 1)
-					{
 						dist = 0;
-					}
 
 					_direction = Math.atan2(dy, dx);
 					_amount = Math.min(_radius, dist) / _radius;
@@ -246,9 +230,7 @@ class FlxJoyStick extends FlxSpriteGroup
 				status = HIGHLIGHT;
 
 				if (onUp != null)
-				{
 					onUp();
-				}
 
 				acceleration.set();
 			}
@@ -258,9 +240,7 @@ class FlxJoyStick extends FlxSpriteGroup
 				status = HIGHLIGHT;
 
 				if (onOver != null)
-				{
 					onOver();
-				}
 			}
 		}
 
@@ -284,9 +264,7 @@ class FlxJoyStick extends FlxSpriteGroup
 	function get_justPressed():Bool
 	{
 		if (_currentTouch != null)
-		{
 			return _currentTouch.justPressed && status == PRESSED;
-		}
 
 		return false;
 	}
@@ -296,9 +274,7 @@ class FlxJoyStick extends FlxSpriteGroup
 	function get_justReleased():Bool
 	{
 		if (_currentTouch != null)
-		{
 			return _currentTouch.justReleased && status == HIGHLIGHT;
-		}
 
 		return false;
 	}
