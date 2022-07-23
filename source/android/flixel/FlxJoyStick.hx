@@ -11,8 +11,13 @@ import flixel.math.FlxPoint;
 import flixel.math.FlxRect;
 import flixel.util.FlxDestroyUtil;
 import flixel.graphics.frames.FlxAtlasFrames;
+import openfl.utils.Assets;
 
-// Mofifications by saw (m.a. jigsaw)
+/**
+ * ...
+ * @original author Ka Wing Chin
+ * @modification's author: Saw (M.A. Jigsaw)
+ */
 class FlxJoyStick extends FlxSpriteGroup
 {
 	public var status:Int = NORMAL;
@@ -39,12 +44,12 @@ class FlxJoyStick extends FlxSpriteGroup
 	var _amount:Float = 0;
 	var _ease:Float;
 
-	public function new(y:Float = 0, y:Float = 0, radius:Float = 0, ease:Float = 0.25)
+	public function new(X:Float = 0, Y:Float = 0, Radius:Float = 0, Ease:Float = 0.25)
 	{
-		super();
+		super(X, Y);
 
-		_radius = radius;
-		_ease = FlxMath.bound(ease, 0, 60 / FlxG.updateFramerate);
+		_radius = Radius;
+		_ease = FlxMath.bound(Ease, 0, 60 / FlxG.updateFramerate);
 
 		_joysticks.push(this);
 
@@ -53,20 +58,19 @@ class FlxJoyStick extends FlxSpriteGroup
 		createBase();
 		createThumb();
 
-		this.x = x;
-		this.y = y;
-
 		scrollFactor.set();
 		moves = false;
 	}
 
 	function createBase():Void
 	{
-		base = new FlxSprite(0, 0);
-		base.loadGraphic(FlxGraphic.fromFrame(getFrames().getByName('base')));
+		base = new FlxSprite(0,
+			0).loadGraphic(FlxGraphic.fromFrame(FlxAtlasFrames.fromSparrow(Assets.getBitmapData('assets/android/joystick.png'),
+				Assets.getText('assets/android/joystick.xml'))
+				.getByName('base')));
 		base.resetSizeFromFrame();
-		base.x += -base.width * 1.5;
-		base.y += -base.height * 1.5;
+		base.x += -base.width * 0.5;
+		base.y += -base.height * 0.5;
 		base.scrollFactor.set();
 		base.solid = false;
 		#if FLX_DEBUG
@@ -77,9 +81,12 @@ class FlxJoyStick extends FlxSpriteGroup
 
 	function createThumb():Void
 	{
-		thumb = new FlxSprite(0, 0);
-		thumb.loadGraphic(FlxGraphic.fromFrame(getFrames().getByName('thumb')));
+		thumb = new FlxSprite(0,
+			0).loadGraphic(FlxAtlasFrames.fromSparrow(Assets.getBitmapData('assets/android/joystick.png'), Assets.getText('assets/android/joystick.xml'))
+				.getByName('thumb')));
 		thumb.resetSizeFromFrame();
+		thumb.x += -thumb.width * 0.5;
+		thumb.y += -thumb.height * 0.5;
 		thumb.scrollFactor.set();
 		thumb.solid = false;
 		#if FLX_DEBUG
@@ -88,15 +95,10 @@ class FlxJoyStick extends FlxSpriteGroup
 		add(thumb);
 	}
 
-	public static function getFrames():FlxAtlasFrames
-	{
-		return Paths.getSparrowAtlas('android/joystick');
-	}
-
 	function createZone():Void
 	{
 		if (base != null && _radius == 0)
-			_radius = base.width * 1.5;
+			_radius = base.width * 0.5;
 
 		_zone.set(x - _radius, y - _radius, 2 * _radius, 2 * _radius);
 	}
@@ -123,7 +125,6 @@ class FlxJoyStick extends FlxSpriteGroup
 	{
 		var offAll:Bool = true;
 
-		// There is no reason to get into the loop if their is already a pointer on the joystick
 		if (_currentTouch != null)
 			_tempTouches.push(_currentTouch);
 		else
@@ -134,8 +135,6 @@ class FlxJoyStick extends FlxSpriteGroup
 
 				for (joystick in _joysticks)
 				{
-					// Check whether the pointer is already taken by another joystick.
-					// TODO: check this place. This line was 'if (joystick != this && joystick._currentTouch != touch && touchInserted == false)'
 					if (joystick == this && joystick._currentTouch != touch && !touchInserted)
 					{
 						_tempTouches.push(touch);
@@ -149,7 +148,7 @@ class FlxJoyStick extends FlxSpriteGroup
 		{
 			_point = touch.getWorldPosition(FlxG.camera, _point);
 
-			if (!updatejoystick(_point, touch.pressed, touch.justPressed, touch.justReleased, touch))
+			if (!updateJoystick(_point, touch.pressed, touch.justPressed, touch.justReleased, touch))
 			{
 				offAll = false;
 				break;
@@ -167,8 +166,8 @@ class FlxJoyStick extends FlxSpriteGroup
 			}
 		}
 
-		thumb.x = x + Math.cos(_direction) * _amount * _radius - (thumb.width * 1.5);
-		thumb.y = y + Math.sin(_direction) * _amount * _radius - (thumb.height * 1.5);
+		thumb.x = x + Math.cos(_direction) * _amount * _radius - (thumb.width * 0.5);
+		thumb.y = y + Math.sin(_direction) * _amount * _radius - (thumb.height * 0.5);
 
 		if (offAll)
 			status = NORMAL;
@@ -178,13 +177,10 @@ class FlxJoyStick extends FlxSpriteGroup
 		super.update(elapsed);
 	}
 
-	function updatejoystick(TouchPoint:FlxPoint, Pressed:Bool, JustPressed:Bool, JustReleased:Bool, ?Touch:FlxTouch):Bool
+	function updateJoystick(TouchPoint:FlxPoint, Pressed:Bool, JustPressed:Bool, JustReleased:Bool, ?Touch:FlxTouch):Bool
 	{
 		var offAll:Bool = true;
 
-		// Use the touch to figure out the world position if it's passed in, as
-		// the screen coordinates passed in touchPoint are wrong
-		// if the control is used in a group, for example.
 		if (Touch != null)
 			TouchPoint.set(Touch.screenX, Touch.screenY);
 
@@ -200,8 +196,10 @@ class FlxJoyStick extends FlxSpriteGroup
 				status = PRESSED;
 
 				if (JustPressed)
+				{
 					if (onDown != null)
 						onDown();
+				}
 
 				if (status == PRESSED)
 				{
