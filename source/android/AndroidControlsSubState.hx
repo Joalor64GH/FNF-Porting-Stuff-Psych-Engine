@@ -13,8 +13,6 @@ import flixel.util.FlxSave;
 import flixel.util.FlxColor;
 import flixel.input.touch.FlxTouch;
 import flixel.text.FlxText;
-import flixel.tweens.FlxEase;
-import flixel.tweens.FlxTween;
 import openfl.utils.Assets;
 
 class AndroidControlsSubState extends FlxSubState
@@ -39,13 +37,13 @@ class AndroidControlsSubState extends FlxSubState
 	{
 		var bg:FlxSprite = new FlxSprite().makeGraphic(FlxG.width, FlxG.height,
 			FlxColor.fromHSB(FlxG.random.int(0, 359), FlxG.random.float(0, 0.8), FlxG.random.float(0.3, 1)));
-		bg.alpha = 0.00001; // no lag on tween
+		bg.alpha = 0.6;
 		bg.scrollFactor.set();
 		add(bg);
 
 		resetButton = new FlxButton(FlxG.width - 200, 50, 'Reset', function()
 		{
-			if (resetButton.visible) // being sure about something
+			if (resetButton.visible && virtualPad != null) // being sure about something
 			{
 				virtualPad.buttonUp.x = FlxG.width - 258;
 				virtualPad.buttonUp.y = FlxG.height - 408;
@@ -134,8 +132,6 @@ class AndroidControlsSubState extends FlxSubState
 		changeSelection();
 
 		super.create();
-
-		FlxTween.tween(bg, {alpha: 0.6}, 1, {ease: FlxEase.circInOut});
 	}
 
 	override function update(elapsed:Float)

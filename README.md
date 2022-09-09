@@ -4,6 +4,27 @@ The things im using when i port a mod to android
 
 **This should be used for the FNF 0.2.8 update and engines that have this version of FNF**
 
+### PC compile instructions For Android:
+
+1. Download
+* [JDK](https://www.oracle.com/java/technologies/javase/javase-jdk8-downloads.html) - Download version `11` of it
+* [Android Studio](https://developer.android.com/studio) - I recomend you to download the latest version
+* [NDK](https://developer.android.com/ndk/downloads/older_releases?hl=fi) - Download version `r21e` (This is the version recomended by Lime)
+
+2. Install JDK, Android Studio 
+Unzip the NDK (the NDK does not need to be installed because its a zip archive)
+
+3. We need to set up Android Studio for this go to android studio and find android sdk (in settings -> Appearance & Behavior -> system settings -> android sdk)
+![andr](https://user-images.githubusercontent.com/59097731/104179652-44346000-541d-11eb-8ad1-1e4dfae304a8.PNG)
+![andr2](https://user-images.githubusercontent.com/59097731/104179943-a9885100-541d-11eb-8f69-7fb5a4bfdd37.PNG)
+
+4. Run command `lime setup android` in CMD/PowerShell (You need to insert the program paths)
+
+5. Open project in CMD/PowerShell `cd (path to fnf source)`
+And run command `lime build android -final`
+The apk will be generated in this path (path to source)\export\release\android\bin\app\build\outputs\apk\debug
+_____________________________________
+
 ## Instructions:
 
 1. You Need to install extension-androidtools
@@ -51,9 +72,9 @@ Add
 	<haxedef name="HXCPP_STACK_LINE" if="release" />
 
 	<!--Android-Internet-Connection-->
-	<android permission="android.permission.ACCESS_NETWORK_STATE" />
-	<android permission="android.permission.ACCESS_WIFI_STATE" />
-	<android permission="android.permission.INTERNET" />
+	<config:android permission="android.permission.ACCESS_NETWORK_STATE" />
+	<config:android permission="android.permission.ACCESS_WIFI_STATE" />
+	<config:android permission="android.permission.INTERNET" />
 ```
 
 4. Setup Controls.hx
@@ -320,15 +341,14 @@ inline function get_controls():Controls
 add
 ```haxe
 	#if android
-	var virtualPad:FlxVirtualPad;
 	var androidControls:AndroidControls;
+	var virtualPad:FlxVirtualPad;
 	var trackedinputsUI:Array<FlxActionInput> = [];
 	var trackedinputsNOTES:Array<FlxActionInput> = [];
 
 	public function addVirtualPad(DPad:FlxDPadMode, Action:FlxActionMode)
 	{
 		virtualPad = new FlxVirtualPad(DPad, Action);
-		virtualPad.alpha = AndroidControls.getOpacity();
 		add(virtualPad);
 
 		controls.setVirtualPadUI(virtualPad, DPad, Action);
@@ -345,10 +365,9 @@ add
 			remove(virtualPad);
 	}
 
-	public function addAndroidControls()
+	public function addAndroidControls(DefaultDrawTarget:Bool = true)
 	{
 		androidControls = new AndroidControls();
-		androidControls.alpha = AndroidControls.getOpacity();
 
 		switch (AndroidControls.getMode())
 		{
@@ -365,7 +384,7 @@ add
 		controls.trackedinputsNOTES = [];
 
 		var camControls:FlxCamera = new FlxCamera();
-		FlxG.cameras.add(camControls);
+		FlxG.cameras.add(camControls, DefaultDrawTarget);
 		camControls.bgColor.alpha = 0;
 
 		androidControls.cameras = [camControls];
@@ -382,12 +401,12 @@ add
 			remove(androidControls);
 	}
 
-	public function addPadCamera()
+	public function addPadCamera(DefaultDrawTarget:Bool = true)
 	{
 		if (virtualPad != null)
 		{
 			var camControls:FlxCamera = new FlxCamera();
-			FlxG.cameras.add(camControls);
+			FlxG.cameras.add(camControls, DefaultDrawTarget);
 			camControls.bgColor.alpha = 0;
 			virtualPad.cameras = [camControls];
 		}
@@ -449,7 +468,6 @@ add
 	public function addVirtualPad(DPad:FlxDPadMode, Action:FlxActionMode)
 	{
 		virtualPad = new FlxVirtualPad(DPad, Action);
-		virtualPad.alpha = AndroidControls.getOpacity();
 		add(virtualPad);
 
 		controls.setVirtualPadUI(virtualPad, DPad, Action);
@@ -466,12 +484,12 @@ add
 			remove(virtualPad);
 	}
 
-	public function addPadCamera()
+	public function addPadCamera(DefaultDrawTarget:Bool = true)
 	{
 		if (virtualPad != null)
 		{
 			var camControls:FlxCamera = new FlxCamera();
-			FlxG.cameras.add(camControls);
+			FlxG.cameras.add(camControls, DefaultDrawTarget);
 			camControls.bgColor.alpha = 0;
 			virtualPad.cameras = [camControls];
 		}
@@ -505,7 +523,7 @@ now on every state/substate add
 addVirtualPad(LEFT_FULL, A_B);
 #end
 
-if you want to remove it at some moment use
+//if you want to remove it at some moment use
 #if android
 removeVirtualPad();
 #end
@@ -525,7 +543,7 @@ addPadCamera();
 addAndroidControls();
 #end
 
-if you want to remove it at some moment use
+//if you want to remove it at some moment use
 #if android
 removeAndroidControls();
 #end
