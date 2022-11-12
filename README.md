@@ -7,16 +7,16 @@ The things im using when i port a mod to android
 ### PC compile instructions For Android:
 
 1. Download
-* [JDK](https://www.oracle.com/java/technologies/javase/javase-jdk8-downloads.html) - Download version `11` of it
+* [JDK](https://www.oracle.com/java/technologies/javase/javase-jdk8-downloads.html) - Download the version `18` of it
 * [Android Studio](https://developer.android.com/studio) - I recomend you to download the latest version
-* [NDK](https://developer.android.com/ndk/downloads/older_releases?hl=fi) - Download version `r21e` (This is the version recomended by Lime)
+* [NDK](https://developer.android.com/ndk/downloads/older_releases?hl=fi) - Download the version `r21e` (This is the version recomended by Lime)
 
 2. Install JDK, Android Studio 
 Unzip the NDK (the NDK does not need to be installed because its a zip archive)
 
 3. We need to set up Android Studio for this go to android studio and find android sdk (in settings -> Appearance & Behavior -> system settings -> android sdk)
-![andr](https://user-images.githubusercontent.com/59097731/104179652-44346000-541d-11eb-8ad1-1e4dfae304a8.PNG)
-![andr2](https://user-images.githubusercontent.com/59097731/104179943-a9885100-541d-11eb-8f69-7fb5a4bfdd37.PNG)
+![first pic](https://user-images.githubusercontent.com/59097731/104179652-44346000-541d-11eb-8ad1-1e4dfae304a8.PNG)
+![second pic](https://user-images.githubusercontent.com/59097731/104179943-a9885100-541d-11eb-8f69-7fb5a4bfdd37.PNG)
 
 4. Run command `lime setup android` in CMD/PowerShell (You need to insert the program paths)
 
@@ -47,54 +47,60 @@ On This Line
 Replace It With
 ```xml
 	<!--Mobile-specific-->
-	<window if="mobile" orientation="landscape" fullscreen="true" width="1280" height="720" resizable="false" allow-shaders="true" require-shaders="true" />
+	<window if="mobile" orientation="landscape" fullscreen="true" resizable="false" allow-shaders="true" require-shaders="true" allow-high-dpi="true" />
 ```
 
 Add
-
 ```xml
-	<assets path="assets/android" if="android" /> <!-- to not have the android assets in another builds -saw -->
+	<assets path="mobile" rename="assets/mobile" if="mobile" /> <!-- to not have the mobile assets in another builds -saw -->
 ```
 
 Then, After the Libraries, or where the packeges are located add
-
 ```xml
 	<haxelib name="extension-androidtools" if="android" />
 ```
 
 Add
 ```xml
-	<!--Make's-the-Game-use-less-ram-->
+	<!--Allow working memory greater than 1 Gig-->
 	<haxedef name="HXCPP_GC_BIG_BLOCKS" />
 
-	<!--Always-enable-Null-Object-Reference-check-->
-	<haxedef name="HXCPP_CHECK_POINTER" if="release" />
-	<haxedef name="HXCPP_STACK_LINE" if="release" />
+	<!--Always enable Null Object Reference check-->
+	<haxedef name="HXCPP_CHECK_POINTER" />
+	<haxedef name="HXCPP_STACK_LINE" />
 
-	<!--Android-Internet-Connection-->
+	<!--Android Internet Connection-->
 	<config:android permission="android.permission.ACCESS_NETWORK_STATE" />
 	<config:android permission="android.permission.ACCESS_WIFI_STATE" />
 	<config:android permission="android.permission.INTERNET" />
+
+	<!--Android External Storage-->
+	<config:android permission="android.permission.WRITE_EXTERNAL_STORAGE" />
+	<config:android permission="android.permission.READ_EXTERNAL_STORAGE" />
+
+	<!--Android Gradle-->
+	<config:android gradle-version="7.5.1" />
+	<config:android gradle-plugin="7.3.1" />
 ```
 
 4. Setup Controls.hx
 
-after these lines
+After these lines
 ```haxe
 import flixel.input.actions.FlxActionSet;
 import flixel.input.keyboard.FlxKey;
 ```
-add
 
+Add
 ```haxe
-#if android
-import android.flixel.FlxButton;
-import android.flixel.FlxHitbox;
-import android.flixel.FlxVirtualPad;
+#if mobile
+import mobile.flixel.FlxButton;
+import mobile.flixel.FlxHitbox;
+import mobile.flixel.FlxVirtualPad;
 #end
 ```
 
-before these lines
+Before these lines
 ```haxe
 override function update()
 {
@@ -102,32 +108,32 @@ override function update()
 }
 ```
 
-add
+Add
 ```haxe
-	#if android
-	public var trackedinputsUI:Array<FlxActionInput> = [];
-	public var trackedinputsNOTES:Array<FlxActionInput> = [];
+	#if mobile
+	public var trackedInputsUI:Array<FlxActionInput> = [];
+	public var trackedInputsNOTES:Array<FlxActionInput> = [];
 
-	public function addbuttonNOTES(action:FlxActionDigital, button:FlxButton, state:FlxInputState)
+	public function addButtonNOTES(action:FlxActionDigital, button:FlxButton, state:FlxInputState)
 	{
 		var input:FlxActionInputDigitalIFlxInput = new FlxActionInputDigitalIFlxInput(button, state);
-		trackedinputsNOTES.push(input);
+		trackedInputsNOTES.push(input);
 		action.add(input);
 	}
 
-	public function addbuttonUI(action:FlxActionDigital, button:FlxButton, state:FlxInputState)
+	public function addButtonUI(action:FlxActionDigital, button:FlxButton, state:FlxInputState)
 	{
 		var input:FlxActionInputDigitalIFlxInput = new FlxActionInputDigitalIFlxInput(button, state);
-		trackedinputsUI.push(input);
+		trackedInputsUI.push(input);
 		action.add(input);
 	}
 
-	public function setHitBox(Hitbox:FlxHitbox) 
+	public function setHitBox(Hitbox:FlxHitbox)
 	{
-		inline forEachBound(Control.NOTE_UP, (action, state) -> addbuttonNOTES(action, Hitbox.buttonUp, state));
-		inline forEachBound(Control.NOTE_DOWN, (action, state) -> addbuttonNOTES(action, Hitbox.buttonDown, state));
-		inline forEachBound(Control.NOTE_LEFT, (action, state) -> addbuttonNOTES(action, Hitbox.buttonLeft, state));
-		inline forEachBound(Control.NOTE_RIGHT, (action, state) -> addbuttonNOTES(action, Hitbox.buttonRight, state));
+		inline forEachBound(Control.NOTE_UP, (action, state) -> addButtonNOTES(action, Hitbox.buttonUp, state));
+		inline forEachBound(Control.NOTE_DOWN, (action, state) -> addButtonNOTES(action, Hitbox.buttonDown, state));
+		inline forEachBound(Control.NOTE_LEFT, (action, state) -> addButtonNOTES(action, Hitbox.buttonLeft, state));
+		inline forEachBound(Control.NOTE_RIGHT, (action, state) -> addButtonNOTES(action, Hitbox.buttonRight, state));
 	}
 
 	public function setVirtualPadUI(VirtualPad:FlxVirtualPad, DPad:FlxDPadMode, Action:FlxActionMode)
@@ -135,90 +141,90 @@ add
 		switch (DPad)
 		{
 			case UP_DOWN:
-				inline forEachBound(Control.UI_UP, (action, state) -> addbuttonUI(action, VirtualPad.buttonUp, state));
-				inline forEachBound(Control.UI_DOWN, (action, state) -> addbuttonUI(action, VirtualPad.buttonDown, state));
+				inline forEachBound(Control.UI_UP, (action, state) -> addButtonUI(action, VirtualPad.buttonUp, state));
+				inline forEachBound(Control.UI_DOWN, (action, state) -> addButtonUI(action, VirtualPad.buttonDown, state));
 			case LEFT_RIGHT:
-				inline forEachBound(Control.UI_LEFT, (action, state) -> addbuttonUI(action, VirtualPad.buttonLeft, state));
-				inline forEachBound(Control.UI_RIGHT, (action, state) -> addbuttonUI(action, VirtualPad.buttonRight, state));
+				inline forEachBound(Control.UI_LEFT, (action, state) -> addButtonUI(action, VirtualPad.buttonLeft, state));
+				inline forEachBound(Control.UI_RIGHT, (action, state) -> addButtonUI(action, VirtualPad.buttonRight, state));
 			case UP_LEFT_RIGHT:
-				inline forEachBound(Control.UI_UP, (action, state) -> addbuttonUI(action, VirtualPad.buttonUp, state));
-				inline forEachBound(Control.UI_LEFT, (action, state) -> addbuttonUI(action, VirtualPad.buttonLeft, state));
-				inline forEachBound(Control.UI_RIGHT, (action, state) -> addbuttonUI(action, VirtualPad.buttonRight, state));
+				inline forEachBound(Control.UI_UP, (action, state) -> addButtonUI(action, VirtualPad.buttonUp, state));
+				inline forEachBound(Control.UI_LEFT, (action, state) -> addButtonUI(action, VirtualPad.buttonLeft, state));
+				inline forEachBound(Control.UI_RIGHT, (action, state) -> addButtonUI(action, VirtualPad.buttonRight, state));
 			case LEFT_FULL | RIGHT_FULL:
-				inline forEachBound(Control.UI_UP, (action, state) -> addbuttonUI(action, VirtualPad.buttonUp, state));
-				inline forEachBound(Control.UI_DOWN, (action, state) -> addbuttonUI(action, VirtualPad.buttonDown, state));
-				inline forEachBound(Control.UI_LEFT, (action, state) -> addbuttonUI(action, VirtualPad.buttonLeft, state));
-				inline forEachBound(Control.UI_RIGHT, (action, state) -> addbuttonUI(action, VirtualPad.buttonRight, state));
+				inline forEachBound(Control.UI_UP, (action, state) -> addButtonUI(action, VirtualPad.buttonUp, state));
+				inline forEachBound(Control.UI_DOWN, (action, state) -> addButtonUI(action, VirtualPad.buttonDown, state));
+				inline forEachBound(Control.UI_LEFT, (action, state) -> addButtonUI(action, VirtualPad.buttonLeft, state));
+				inline forEachBound(Control.UI_RIGHT, (action, state) -> addButtonUI(action, VirtualPad.buttonRight, state));
 			case BOTH_FULL:
-				inline forEachBound(Control.UI_UP, (action, state) -> addbuttonUI(action, VirtualPad.buttonUp, state));
-				inline forEachBound(Control.UI_DOWN, (action, state) -> addbuttonUI(action, VirtualPad.buttonDown, state));
-				inline forEachBound(Control.UI_LEFT, (action, state) -> addbuttonUI(action, VirtualPad.buttonLeft, state));
-				inline forEachBound(Control.UI_RIGHT, (action, state) -> addbuttonUI(action, VirtualPad.buttonRight, state));
-				inline forEachBound(Control.UI_UP, (action, state) -> addbuttonUI(action, VirtualPad.buttonUp2, state));
-				inline forEachBound(Control.UI_DOWN, (action, state) -> addbuttonUI(action, VirtualPad.buttonDown2, state));
-				inline forEachBound(Control.UI_LEFT, (action, state) -> addbuttonUI(action, VirtualPad.buttonLeft2, state));
-				inline forEachBound(Control.UI_RIGHT, (action, state) -> addbuttonUI(action, VirtualPad.buttonRight2, state));
+				inline forEachBound(Control.UI_UP, (action, state) -> addButtonUI(action, VirtualPad.buttonUp, state));
+				inline forEachBound(Control.UI_DOWN, (action, state) -> addButtonUI(action, VirtualPad.buttonDown, state));
+				inline forEachBound(Control.UI_LEFT, (action, state) -> addButtonUI(action, VirtualPad.buttonLeft, state));
+				inline forEachBound(Control.UI_RIGHT, (action, state) -> addButtonUI(action, VirtualPad.buttonRight, state));
+				inline forEachBound(Control.UI_UP, (action, state) -> addButtonUI(action, VirtualPad.buttonUp2, state));
+				inline forEachBound(Control.UI_DOWN, (action, state) -> addButtonUI(action, VirtualPad.buttonDown2, state));
+				inline forEachBound(Control.UI_LEFT, (action, state) -> addButtonUI(action, VirtualPad.buttonLeft2, state));
+				inline forEachBound(Control.UI_RIGHT, (action, state) -> addButtonUI(action, VirtualPad.buttonRight2, state));
 			case NONE: // do nothing
 		}
 
 		switch (Action)
 		{
 			case A:
-				inline forEachBound(Control.ACCEPT, (action, state) -> addbuttonUI(action, VirtualPad.buttonA, state));
+				inline forEachBound(Control.ACCEPT, (action, state) -> addButtonUI(action, VirtualPad.buttonA, state));
 			case B:
-				inline forEachBound(Control.BACK, (action, state) -> addbuttonUI(action, VirtualPad.buttonB, state));
+				inline forEachBound(Control.BACK, (action, state) -> addButtonUI(action, VirtualPad.buttonB, state));
 			case A_B | A_B_C | A_B_E | A_B_X_Y | A_B_C_X_Y | A_B_C_X_Y_Z | A_B_C_D_V_X_Y_Z:
-				inline forEachBound(Control.ACCEPT, (action, state) -> addbuttonUI(action, VirtualPad.buttonA, state));
-				inline forEachBound(Control.BACK, (action, state) -> addbuttonUI(action, VirtualPad.buttonB, state));
+				inline forEachBound(Control.ACCEPT, (action, state) -> addButtonUI(action, VirtualPad.buttonA, state));
+				inline forEachBound(Control.BACK, (action, state) -> addButtonUI(action, VirtualPad.buttonB, state));
 			case NONE: // do nothing
 		}
 	}
 
-	public function setVirtualPadNOTES(VirtualPad:FlxVirtualPad, DPad:FlxDPadMode, Action:FlxActionMode) 
+	public function setVirtualPadNOTES(VirtualPad:FlxVirtualPad, DPad:FlxDPadMode, Action:FlxActionMode)
 	{
 		switch (DPad)
 		{
 			case UP_DOWN:
-				inline forEachBound(Control.NOTE_UP, (action, state) -> addbuttonNOTES(action, VirtualPad.buttonUp, state));
-				inline forEachBound(Control.NOTE_DOWN, (action, state) -> addbuttonNOTES(action, VirtualPad.buttonDown, state));
+				inline forEachBound(Control.NOTE_UP, (action, state) -> addButtonNOTES(action, VirtualPad.buttonUp, state));
+				inline forEachBound(Control.NOTE_DOWN, (action, state) -> addButtonNOTES(action, VirtualPad.buttonDown, state));
 			case LEFT_RIGHT:
-				inline forEachBound(Control.NOTE_LEFT, (action, state) -> addbuttonNOTES(action, VirtualPad.buttonLeft, state));
-				inline forEachBound(Control.NOTE_RIGHT, (action, state) -> addbuttonNOTES(action, VirtualPad.buttonRight, state));
+				inline forEachBound(Control.NOTE_LEFT, (action, state) -> addButtonNOTES(action, VirtualPad.buttonLeft, state));
+				inline forEachBound(Control.NOTE_RIGHT, (action, state) -> addButtonNOTES(action, VirtualPad.buttonRight, state));
 			case UP_LEFT_RIGHT:
-				inline forEachBound(Control.NOTE_UP, (action, state) -> addbuttonNOTES(action, VirtualPad.buttonUp, state));
-				inline forEachBound(Control.NOTE_LEFT, (action, state) -> addbuttonNOTES(action, VirtualPad.buttonLeft, state));
-				inline forEachBound(Control.NOTE_RIGHT, (action, state) -> addbuttonNOTES(action, VirtualPad.buttonRight, state));
+				inline forEachBound(Control.NOTE_UP, (action, state) -> addButtonNOTES(action, VirtualPad.buttonUp, state));
+				inline forEachBound(Control.NOTE_LEFT, (action, state) -> addButtonNOTES(action, VirtualPad.buttonLeft, state));
+				inline forEachBound(Control.NOTE_RIGHT, (action, state) -> addButtonNOTES(action, VirtualPad.buttonRight, state));
 			case LEFT_FULL | RIGHT_FULL:
-				inline forEachBound(Control.NOTE_UP, (action, state) -> addbuttonNOTES(action, VirtualPad.buttonUp, state));
-				inline forEachBound(Control.NOTE_DOWN, (action, state) -> addbuttonNOTES(action, VirtualPad.buttonDown, state));
-				inline forEachBound(Control.NOTE_LEFT, (action, state) -> addbuttonNOTES(action, VirtualPad.buttonLeft, state));
-				inline forEachBound(Control.NOTE_RIGHT, (action, state) -> addbuttonNOTES(action, VirtualPad.buttonRight, state));
+				inline forEachBound(Control.NOTE_UP, (action, state) -> addButtonNOTES(action, VirtualPad.buttonUp, state));
+				inline forEachBound(Control.NOTE_DOWN, (action, state) -> addButtonNOTES(action, VirtualPad.buttonDown, state));
+				inline forEachBound(Control.NOTE_LEFT, (action, state) -> addButtonNOTES(action, VirtualPad.buttonLeft, state));
+				inline forEachBound(Control.NOTE_RIGHT, (action, state) -> addButtonNOTES(action, VirtualPad.buttonRight, state));
 			case BOTH_FULL:
-				inline forEachBound(Control.NOTE_UP, (action, state) -> addbuttonNOTES(action, VirtualPad.buttonUp, state));
-				inline forEachBound(Control.NOTE_DOWN, (action, state) -> addbuttonNOTES(action, VirtualPad.buttonDown, state));
-				inline forEachBound(Control.NOTE_LEFT, (action, state) -> addbuttonNOTES(action, VirtualPad.buttonLeft, state));
-				inline forEachBound(Control.NOTE_RIGHT, (action, state) -> addbuttonNOTES(action, VirtualPad.buttonRight, state));
-				inline forEachBound(Control.NOTE_UP, (action, state) -> addbuttonNOTES(action, VirtualPad.buttonUp2, state));
-				inline forEachBound(Control.NOTE_DOWN, (action, state) -> addbuttonNOTES(action, VirtualPad.buttonDown2, state));
-				inline forEachBound(Control.NOTE_LEFT, (action, state) -> addbuttonNOTES(action, VirtualPad.buttonLeft2, state));
-				inline forEachBound(Control.NOTE_RIGHT, (action, state) -> addbuttonNOTES(action, VirtualPad.buttonRight2, state));
+				inline forEachBound(Control.NOTE_UP, (action, state) -> addButtonNOTES(action, VirtualPad.buttonUp, state));
+				inline forEachBound(Control.NOTE_DOWN, (action, state) -> addButtonNOTES(action, VirtualPad.buttonDown, state));
+				inline forEachBound(Control.NOTE_LEFT, (action, state) -> addButtonNOTES(action, VirtualPad.buttonLeft, state));
+				inline forEachBound(Control.NOTE_RIGHT, (action, state) -> addButtonNOTES(action, VirtualPad.buttonRight, state));
+				inline forEachBound(Control.NOTE_UP, (action, state) -> addButtonNOTES(action, VirtualPad.buttonUp2, state));
+				inline forEachBound(Control.NOTE_DOWN, (action, state) -> addButtonNOTES(action, VirtualPad.buttonDown2, state));
+				inline forEachBound(Control.NOTE_LEFT, (action, state) -> addButtonNOTES(action, VirtualPad.buttonLeft2, state));
+				inline forEachBound(Control.NOTE_RIGHT, (action, state) -> addButtonNOTES(action, VirtualPad.buttonRight2, state));
 			case NONE: // do nothing
 		}
 
 		switch (Action)
 		{
 			case A:
-				inline forEachBound(Control.ACCEPT, (action, state) -> addbuttonNOTES(action, VirtualPad.buttonA, state));
+				inline forEachBound(Control.ACCEPT, (action, state) -> addButtonNOTES(action, VirtualPad.buttonA, state));
 			case B:
-				inline forEachBound(Control.BACK, (action, state) -> addbuttonNOTES(action, VirtualPad.buttonB, state));
+				inline forEachBound(Control.BACK, (action, state) -> addButtonNOTES(action, VirtualPad.buttonB, state));
 			case A_B | A_B_C | A_B_E | A_B_X_Y | A_B_C_X_Y | A_B_C_X_Y_Z | A_B_C_D_V_X_Y_Z:
-				inline forEachBound(Control.ACCEPT, (action, state) -> addbuttonNOTES(action, VirtualPad.buttonA, state));
-				inline forEachBound(Control.BACK, (action, state) -> addbuttonNOTES(action, VirtualPad.buttonB, state));
+				inline forEachBound(Control.ACCEPT, (action, state) -> addButtonNOTES(action, VirtualPad.buttonA, state));
+				inline forEachBound(Control.BACK, (action, state) -> addButtonNOTES(action, VirtualPad.buttonB, state));
 			case NONE: // do nothing
 		}
 	}
 
-	public function removeAControlsInput(Tinputs:Array<FlxActionInput>)
+	public function removeVirtualControlsInput(Tinputs:Array<FlxActionInput>)
 	{
 		for (action in this.digitalActions)
 		{
@@ -237,7 +243,7 @@ add
 	#end
 ```
 
-and replace these lines (you can skip this, it's for psych engine)
+And replace these lines (you can skip this if the mod isn't on psych engine)
 ```haxe
 	public function bindKeys(control:Control, keys:Array<FlxKey>)
 	{
@@ -268,9 +274,9 @@ and replace these lines (you can skip this, it's for psych engine)
 	}
 ```
 
-with
+With
 ```haxe
-	#if !android
+	#if !mobile
 	public function bindKeys(control:Control, keys:Array<FlxKey>)
 	{
 		var copyKeys:Array<FlxKey> = keys.copy();
@@ -321,87 +327,93 @@ with
 
 5. Setup MusicBeatState.hx
 
-in the lines you import things add
+In the lines you import things add
 ```haxe
-#if android
-import android.AndroidControls;
-import android.flixel.FlxVirtualPad;
+#if mobile
+import mobile.MobileControls;
+import mobile.flixel.FlxVirtualPad;
 import flixel.FlxCamera;
 import flixel.input.actions.FlxActionInput;
 import flixel.util.FlxDestroyUtil;
 #end
 ```
 
-after these lines
+After these lines
 ```haxe
 inline function get_controls():Controls
 	return PlayerSettings.player1.controls;
 ```
 
-add
+Add
 ```haxe
-	#if android
-	var androidControls:AndroidControls;
+	#if mobile
+	var mobileControls:MobileControls;
 	var virtualPad:FlxVirtualPad;
-	var trackedinputsUI:Array<FlxActionInput> = [];
-	var trackedinputsNOTES:Array<FlxActionInput> = [];
+	var trackedInputsMobileControls:Array<FlxActionInput> = [];
+	var trackedInputsVirtualPad:Array<FlxActionInput> = [];
 
 	public function addVirtualPad(DPad:FlxDPadMode, Action:FlxActionMode)
 	{
+		if (virtualPad != null)
+			removeVirtualPad();
+
 		virtualPad = new FlxVirtualPad(DPad, Action);
 		add(virtualPad);
 
 		controls.setVirtualPadUI(virtualPad, DPad, Action);
-		trackedinputsUI = controls.trackedinputsUI;
-		controls.trackedinputsUI = [];
+		trackedInputsVirtualPad = controls.trackedInputsUI;
+		controls.trackedInputsUI = [];
 	}
 
 	public function removeVirtualPad()
 	{
-		if (trackedinputsUI != [])
-			controls.removeAControlsInput(trackedinputsUI);
+		if (trackedInputsVirtualPad != [])
+			controls.removeVirtualControlsInput(trackedInputsVirtualPad);
 
 		if (virtualPad != null)
 			remove(virtualPad);
 	}
 
-	public function addAndroidControls(DefaultDrawTarget:Bool = true)
+	public function addMobileControls(DefaultDrawTarget:Bool = true)
 	{
-		androidControls = new AndroidControls();
+		if (mobileControls != null)
+			removeMobileControls();
 
-		switch (AndroidControls.getMode())
+		mobileControls = new MobileControls();
+
+		switch (MobileControls.mode)
 		{
 			case 'Pad-Right' | 'Pad-Left' | 'Pad-Custom':
-				controls.setVirtualPadNOTES(androidControls.virtualPad, RIGHT_FULL, NONE);
+				controls.setVirtualPadNOTES(mobileControls.virtualPad, RIGHT_FULL, NONE);
 			case 'Pad-Duo':
-				controls.setVirtualPadNOTES(androidControls.virtualPad, BOTH_FULL, NONE);
+				controls.setVirtualPadNOTES(mobileControls.virtualPad, BOTH_FULL, NONE);
 			case 'Hitbox':
-				controls.setHitBox(androidControls.hitbox);
+				controls.setHitBox(mobileControls.hitbox);
 			case 'Keyboard': // do nothing
 		}
 
-		trackedinputsNOTES = controls.trackedinputsNOTES;
-		controls.trackedinputsNOTES = [];
+		trackedInputsMobileControls = controls.trackedInputsNOTES;
+		controls.trackedInputsNOTES = [];
 
 		var camControls:FlxCamera = new FlxCamera();
 		FlxG.cameras.add(camControls, DefaultDrawTarget);
 		camControls.bgColor.alpha = 0;
 
-		androidControls.cameras = [camControls];
-		androidControls.visible = false;
-		add(androidControls);
+		mobileControls.cameras = [camControls];
+		mobileControls.visible = false;
+		add(mobileControls);
 	}
 
-	public function removeAndroidControls()
+	public function removeMobileControls()
 	{
-		if (trackedinputsNOTES != [])
-			controls.removeAControlsInput(trackedinputsNOTES);
+		if (trackedInputsMobileControls != [])
+			controls.removeVirtualControlsInput(trackedInputsMobileControls);
 
-		if (androidControls != null)
-			remove(androidControls);
+		if (mobileControls != null)
+			remove(mobileControls);
 	}
 
-	public function addPadCamera(DefaultDrawTarget:Bool = true)
+	public function addVirtualPadCamera(DefaultDrawTarget:Bool = true)
 	{
 		if (virtualPad != null)
 		{
@@ -415,27 +427,27 @@ add
 
 	override function destroy()
 	{
-		#if android
-		if (trackedinputsNOTES != [])
-			controls.removeAControlsInput(trackedinputsNOTES);
+		#if mobile
+		if (trackedInputsMobileControls != [])
+			controls.removeVirtualControlsInput(trackedInputsMobileControls);
 
-		if (trackedinputsUI != [])
-			controls.removeAControlsInput(trackedinputsUI);
+		if (trackedInputsVirtualPad != [])
+			controls.removeVirtualControlsInput(trackedInputsVirtualPad);
 		#end
 
 		super.destroy();
 
-		#if android
+		#if mobile
 		if (virtualPad != null)
 		{
 			virtualPad = FlxDestroyUtil.destroy(virtualPad);
 			virtualPad = null;
 		}
 
-		if (androidControls != null)
+		if (mobileControls != null)
 		{
-			androidControls = FlxDestroyUtil.destroy(androidControls);
-			androidControls = null;
+			mobileControls = FlxDestroyUtil.destroy(mobileControls);
+			mobileControls = null;
 		}
 		#end
 	}
@@ -443,48 +455,51 @@ add
 
 6. Setup MusicBeatSubstate.hx
 
-in the lines you import things add
+In the lines you import things add
 ```haxe
-#if android
-import android.flixel.FlxVirtualPad;
+#if mobile
+import mobile.flixel.FlxVirtualPad;
 import flixel.FlxCamera;
 import flixel.input.actions.FlxActionInput;
 import flixel.util.FlxDestroyUtil;
 #end
 ```
 
-after these lines
+After these lines
 ```haxe
 inline function get_controls():Controls
 	return PlayerSettings.player1.controls;
 ```
 
-add
+Add
 ```haxe
-	#if android
+	#if mobile
 	var virtualPad:FlxVirtualPad;
-	var trackedinputsUI:Array<FlxActionInput> = [];
+	var trackedInputsVirtualPad:Array<FlxActionInput> = [];
 
 	public function addVirtualPad(DPad:FlxDPadMode, Action:FlxActionMode)
 	{
+		if (virtualPad != null)
+			removeVirtualPad();
+
 		virtualPad = new FlxVirtualPad(DPad, Action);
 		add(virtualPad);
 
 		controls.setVirtualPadUI(virtualPad, DPad, Action);
-		trackedinputsUI = controls.trackedinputsUI;
-		controls.trackedinputsUI = [];
+		trackedInputsVirtualPad = controls.trackedInputsUI;
+		controls.trackedInputsUI = [];
 	}
 
 	public function removeVirtualPad()
 	{
-		if (trackedinputsUI != [])
-			controls.removeAControlsInput(trackedinputsUI);
+		if (trackedInputsVirtualPad != [])
+			controls.removeVirtualControlsInput(trackedInputsVirtualPad);
 
 		if (virtualPad != null)
 			remove(virtualPad);
 	}
 
-	public function addPadCamera(DefaultDrawTarget:Bool = true)
+	public function addVirtualPadCamera(DefaultDrawTarget:Bool = true)
 	{
 		if (virtualPad != null)
 		{
@@ -498,14 +513,14 @@ add
 
 	override function destroy()
 	{
-		#if android
-		if (trackedinputsUI != [])
-			controls.removeAControlsInput(trackedinputsUI);
+		#if mobile
+		if (trackedInputsVirtualPad != [])
+			controls.removeVirtualControlsInput(trackedInputsVirtualPad);
 		#end
 
 		super.destroy();
 
-		#if android
+		#if mobile
 		if (virtualPad != null)
 		{
 			virtualPad = FlxDestroyUtil.destroy(virtualPad);
@@ -515,22 +530,20 @@ add
 	}
 ```
 
-And somehow you finished adding the android controls to your psych engine copy
-
-now on every state/substate add
+And somehow you finished adding the android controls to your mod now on every state/substate add
 ```haxe
-#if android
+#if mobile
 addVirtualPad(LEFT_FULL, A_B);
 #end
 
 //if you want to remove it at some moment use
-#if android
+#if mobile
 removeVirtualPad();
 #end
 
 //if you want it to have a camera
-#if android
-addPadCamera();
+#if mobile
+addVirtualPadCamera();
 #end
 
 //in states, these need to be added before super.create();
@@ -539,23 +552,23 @@ addPadCamera();
 //on Playstate.hx after all of the
 //obj.cameras = [...];
 //things, add
-#if android
-addAndroidControls();
+#if mobile
+addMobileControls();
 #end
 
 //if you want to remove it at some moment use
-#if android
-removeAndroidControls();
+#if mobile
+removeMobileControls();
 #end
 
 //to make the controls visible the code is
-#if android
-androidControls.visible = true;
+#if mobile
+mobileControls.visible = true;
 #end
 
 //to make the controls invisible the code is
-#if android
-androidControls.visible = false;
+#if mobile
+mobileControls.visible = false;
 #end
 ```
 
@@ -563,12 +576,12 @@ androidControls.visible = false;
 
 in TitleState.hx
 
-after
+After
 ```haxe
 override public function create():Void
 ```
 
-add
+Add
 ```haxe
 #if android
 FlxG.android.preventDefaultKeys = [BACK];
@@ -577,47 +590,47 @@ FlxG.android.preventDefaultKeys = [BACK];
 
 8. Set An action to the BACK Button
 
-you can set one with
+You can set one with
 ```haxe
 #if android || FlxG.android.justReleased.BACK #end
 ```
 
-9. On sys.FileSystem and sys.io.File for modding and polymod stuff
+9. On `sys.FileSystem`, `sys.io.File` Stuff
 
-this is not working with app storage but on phone storage it will work with this
-
+This is not working with app storage but on phone storage it will work with this
 ```haxe
-SUtil.getPath() + 
+SUtil.getStorageDirectory() + 
 ```
-this will make the game use the phone storage
-but you will have to add one thing in Your source
+This will make the game use the phone storage but you will have to add one thing in your source
 
-in Main.hx before 
+In Main.hx before 
 ```haxe
 addChild(new FlxGame(gameWidth, gameHeight, initialState, zoom, framerate, framerate, skipSplash, startFullscreen));
 ```
 
-add 
+Add
 ```haxe
-SUtil.check();
+SUtil.checkPermissions();
 ```
-this will check for android storage permisions and the assets/mods directories
+
+This will check for android storage permisions and the `assets` or `mods` directories
 
 10. On Crash Application Alert
 
-on Main.hx after
+On Main.hx after
 ```haxe
 public function new()
-```	
-add
+```
+
+Add
 ```haxe
 SUtil.uncaughtErrorHandler();
 ```
 
 11. File Saver
 
-This is a feature to save files with sys.io.File
-This is the code
+This is a feature to save files with sys.io.File in phone storage in `saves` directory
+
 ```haxe
 SUtil.saveContent("your file name", ".txt", "lololol");
 ```
@@ -625,7 +638,7 @@ SUtil.saveContent("your file name", ".txt", "lololol");
 13. Do an action when you press on the screen
 
 ```haxe
-#if android
+#if mobile
 var justTouched:Bool = false;
 
 for (touch in FlxG.touches.list)
@@ -639,5 +652,5 @@ if (justTouched)
 
 ## Credits:
 * Saw (M.A. JIGSAW) me - Doing the rest of the code, utils, pad buttons and other things
-* luckydog7 - Original code for android controls and hitbox original design.
+* luckydog7 - Original code for mobile controls and hitbox graphic shape original code.
 * Goldie - Pad designer.
