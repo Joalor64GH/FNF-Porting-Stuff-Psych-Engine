@@ -48,16 +48,10 @@ class MobileControls extends FlxSpriteGroup
 		super.destroy();
 
 		if (virtualPad != null)
-		{
 			virtualPad = FlxDestroyUtil.destroy(virtualPad);
-			virtualPad = null;
-		}
 
 		if (hitbox != null)
-		{
 			hitbox = FlxDestroyUtil.destroy(hitbox);
-			hitbox = null;
-		}
 	}
 
 	private static function get_mode():String

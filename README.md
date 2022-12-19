@@ -7,7 +7,7 @@ The things im using when i port a mod to android
 ### PC compile instructions For Android:
 
 1. Download
-* [JDK](https://www.oracle.com/java/technologies/javase/javase-jdk8-downloads.html) - Download the version `18` of it
+* [JDK](https://www.oracle.com/java/technologies/javase/javase-jdk8-downloads.html) - Download the version `19` of it
 * [Android Studio](https://developer.android.com/studio) - I recomend you to download the latest version
 * [NDK](https://developer.android.com/ndk/downloads/older_releases?hl=fi) - Download the version `r21e` (This is the version recomended by Lime)
 
@@ -52,7 +52,7 @@ Replace It With
 
 Add
 ```xml
-	<assets path="mobile" rename="assets/mobile" if="mobile" /> <!-- to not have the mobile assets in another builds -saw -->
+	<assets path="mobile" rename="assets/mobile" if="mobile" /> <!-- in order to not have the mobile assets in another builds -saw -->
 ```
 
 Then, After the Libraries, or where the packeges are located add
@@ -62,25 +62,32 @@ Then, After the Libraries, or where the packeges are located add
 
 Add
 ```xml
+
 	<!--Allow working memory greater than 1 Gig-->
 	<haxedef name="HXCPP_GC_BIG_BLOCKS" />
 
 	<!--Always enable Null Object Reference check-->
 	<haxedef name="HXCPP_CHECK_POINTER" />
 	<haxedef name="HXCPP_STACK_LINE" />
+	<haxedef name="HXCPP_STACK_TRACE"/>
 
-	<!--Android Internet Connection-->
-	<config:android permission="android.permission.ACCESS_NETWORK_STATE" />
-	<config:android permission="android.permission.ACCESS_WIFI_STATE" />
-	<config:android permission="android.permission.INTERNET" />
+	<section if="android">
+		<!--Permissions-->
+		<config:android permission="android.permission.ACCESS_NETWORK_STATE" />
+		<config:android permission="android.permission.ACCESS_WIFI_STATE" />
+		<config:android permission="android.permission.INTERNET" />
+		<config:android permission="android.permission.WRITE_EXTERNAL_STORAGE" />
+		<config:android permission="android.permission.READ_EXTERNAL_STORAGE" />
 
-	<!--Android External Storage-->
-	<config:android permission="android.permission.WRITE_EXTERNAL_STORAGE" />
-	<config:android permission="android.permission.READ_EXTERNAL_STORAGE" />
+		<!--Gradle-->
+		<config:android gradle-version="7.6" gradle-plugin="7.3.1" />
+	</section>
 
-	<!--Android Gradle-->
-	<config:android gradle-version="7.5.1" />
-	<config:android gradle-plugin="7.3.1" />
+	<section if="ios">
+		<!--Dependency--> 
+		<dependency name="Metal.framework" />
+		<dependency name="WebKit.framework" />
+	</section>
 ```
 
 4. Setup Controls.hx
@@ -367,7 +374,7 @@ Add
 
 	public function removeVirtualPad()
 	{
-		if (trackedInputsVirtualPad != [])
+		if (trackedInputsVirtualPad.length > 0)
 			controls.removeVirtualControlsInput(trackedInputsVirtualPad);
 
 		if (virtualPad != null)
@@ -406,7 +413,7 @@ Add
 
 	public function removeMobileControls()
 	{
-		if (trackedInputsMobileControls != [])
+		if (trackedInputsMobileControls.length > 0)
 			controls.removeVirtualControlsInput(trackedInputsMobileControls);
 
 		if (mobileControls != null)
@@ -428,10 +435,10 @@ Add
 	override function destroy()
 	{
 		#if mobile
-		if (trackedInputsMobileControls != [])
+		if (trackedInputsMobileControls.length > 0)
 			controls.removeVirtualControlsInput(trackedInputsMobileControls);
 
-		if (trackedInputsVirtualPad != [])
+		if (trackedInputsVirtualPad.length > 0)
 			controls.removeVirtualControlsInput(trackedInputsVirtualPad);
 		#end
 
@@ -439,16 +446,10 @@ Add
 
 		#if mobile
 		if (virtualPad != null)
-		{
 			virtualPad = FlxDestroyUtil.destroy(virtualPad);
-			virtualPad = null;
-		}
 
 		if (mobileControls != null)
-		{
 			mobileControls = FlxDestroyUtil.destroy(mobileControls);
-			mobileControls = null;
-		}
 		#end
 	}
 ```
@@ -492,7 +493,7 @@ Add
 
 	public function removeVirtualPad()
 	{
-		if (trackedInputsVirtualPad != [])
+		if (trackedInputsVirtualPad.length > 0)
 			controls.removeVirtualControlsInput(trackedInputsVirtualPad);
 
 		if (virtualPad != null)
@@ -514,7 +515,7 @@ Add
 	override function destroy()
 	{
 		#if mobile
-		if (trackedInputsVirtualPad != [])
+		if (trackedInputsVirtualPad.length > 0)
 			controls.removeVirtualControlsInput(trackedInputsVirtualPad);
 		#end
 
@@ -522,10 +523,7 @@ Add
 
 		#if mobile
 		if (virtualPad != null)
-		{
 			virtualPad = FlxDestroyUtil.destroy(virtualPad);
-			virtualPad = null;
-		}
 		#end
 	}
 ```

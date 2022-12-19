@@ -1,7 +1,7 @@
 package mobile.flixel;
 
-import flash.display.BitmapData;
-import flash.display.Shape;
+import openfl.display.BitmapData;
+import openfl.display.Shape;
 import flixel.FlxG;
 import flixel.group.FlxSpriteGroup;
 import mobile.flixel.FlxButton;
@@ -26,10 +26,10 @@ class FlxHitbox extends FlxSpriteGroup
 	{
 		super();
 
-		add(buttonLeft = createHint(0, 0, Std.int(FlxG.width / 4), FlxG.height, 0xFF00FF));
-		add(buttonDown = createHint(FlxG.width / 4, 0, Std.int(FlxG.width / 4), FlxG.height, 0x00FFFF));
-		add(buttonUp = createHint(FlxG.width / 2, 0, Std.int(FlxG.width / 4), FlxG.height, 0x00FF00));
-		add(buttonRight = createHint((FlxG.width / 2) + (FlxG.width / 4), 0, Std.int(FlxG.width / 4), FlxG.height, 0xFF0000));
+		add(buttonLeft = createHint(0, 0, 0, 0, 0xFF00FF));
+		add(buttonDown = createHint(FlxG.width / 4, 0, 0, 0, 0x00FFFF));
+		add(buttonUp = createHint(FlxG.width / 2, 0, 0, 0, 0x00FF00));
+		add(buttonRight = createHint((FlxG.width / 2) + (FlxG.width / 4), 0, 0, 0, 0xFF0000));
 
 		scrollFactor.set();
 	}
@@ -62,6 +62,12 @@ class FlxHitbox extends FlxSpriteGroup
 
 	private function createHint(X:Float, Y:Float, Width:Int, Height:Int, Color:Int = 0xFFFFFF):FlxButton
 	{
+		if (Width == 0)
+			Width = Std.int(FlxG.width / 4);
+
+		if (Height == 0)
+			Height = FlxG.height;
+
 		var hint:FlxButton = new FlxButton(X, Y);
 		hint.loadGraphic(createHintGraphic(Width, Height, Color));
 		hint.solid = false;
@@ -78,8 +84,11 @@ class FlxHitbox extends FlxSpriteGroup
 			if (hint.alpha != 0.00001)
 				hint.alpha = 0.00001;
 		}
-		hint.onOut.callback = hint.onUp.callback;
-		hint.onOver.callback = hint.onDown.callback;
+		hint.onOut.callback = function()
+		{
+			if (hint.alpha != 0.00001)
+				hint.alpha = 0.00001;
+		}
 		#if FLX_DEBUG
 		hint.ignoreDrawDebug = true;
 		#end
