@@ -1,9 +1,9 @@
 package mobile.flixel;
 
-import openfl.display.BitmapData;
-import openfl.display.Shape;
 import flixel.FlxG;
 import flixel.group.FlxSpriteGroup;
+import openfl.display.BitmapData;
+import openfl.display.Shape;
 import mobile.flixel.FlxButton;
 
 /**
@@ -88,6 +88,11 @@ class FlxHitbox extends FlxSpriteGroup
 		{
 			if (hint.alpha != 0.00001)
 				hint.alpha = 0.00001;
+		}
+		hint.onOver.callback = function()
+		{
+			if (hint.alpha != 0.2)
+				hint.alpha = 0.2;
 		}
 		#if FLX_DEBUG
 		hint.ignoreDrawDebug = true;
