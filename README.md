@@ -78,9 +78,13 @@ Add
 		<config:android permission="android.permission.INTERNET" />
 		<config:android permission="android.permission.WRITE_EXTERNAL_STORAGE" />
 		<config:android permission="android.permission.READ_EXTERNAL_STORAGE" />
+		<config:android permission="android.permission.VIBRATE" />
 
 		<!--Gradle-->
 		<config:android gradle-version="7.6" gradle-plugin="7.3.1" />
+
+		<!--Audio Recording Fix-->
+		<config:android target-sdk-version="29" if="${lime <= 8.0.0}" />
 	</section>
 
 	<section if="ios">
@@ -332,12 +336,12 @@ With
 	#end
 ```
 
-5. Setup MusicBeatState.hx
+5. Setup MusicBeatState.hx and MusicBeatSubstate.hx.
 
 In the lines you import things add
 ```haxe
 #if mobile
-import mobile.MobileControls;
+import mobile.flixel.FlxHitbox;
 import mobile.flixel.FlxVirtualPad;
 import flixel.FlxCamera;
 import flixel.input.actions.FlxActionInput;
@@ -354,17 +358,18 @@ inline function get_controls():Controls
 Add
 ```haxe
 	#if mobile
-	var mobileControls:MobileControls;
+	var hitbox:FlxHitbox;
 	var virtualPad:FlxVirtualPad;
-	var trackedInputsMobileControls:Array<FlxActionInput> = [];
+	var trackedInputsHitbox:Array<FlxActionInput> = [];
 	var trackedInputsVirtualPad:Array<FlxActionInput> = [];
 
-	public function addVirtualPad(DPad:FlxDPadMode, Action:FlxActionMode)
+	public function addVirtualPad(DPad:FlxDPadMode, Action:FlxActionMode, ?visible = true):Void
 	{
 		if (virtualPad != null)
 			removeVirtualPad();
 
 		virtualPad = new FlxVirtualPad(DPad, Action);
+		virtualPad.visible = visible;
 		add(virtualPad);
 
 		controls.setVirtualPadUI(virtualPad, DPad, Action);
@@ -372,7 +377,18 @@ Add
 		controls.trackedInputsUI = [];
 	}
 
-	public function removeVirtualPad()
+	public function addVirtualPadCamera(DefaultDrawTarget:Bool = true):Void
+	{
+		if (virtualPad != null)
+		{
+			var camControls:FlxCamera = new FlxCamera();
+			FlxG.cameras.add(camControls, DefaultDrawTarget);
+			camControls.bgColor.alpha = 0;
+			virtualPad.cameras = [camControls];
+		}
+	}
+
+	public function removeVirtualPad():Void
 	{
 		if (trackedInputsVirtualPad.length > 0)
 			controls.removeVirtualControlsInput(trackedInputsVirtualPad);
@@ -381,62 +397,46 @@ Add
 			remove(virtualPad);
 	}
 
-	public function addMobileControls(DefaultDrawTarget:Bool = true)
+	public function addHitbox(?visible = true):Void
 	{
-		if (mobileControls != null)
-			removeMobileControls();
+		if (hitbox != null)
+			removeHitbox();
 
-		mobileControls = new MobileControls();
+		hitbox = new FlxHitbox();
+		hitbox.visible = visible;
+		add(hitbox);
 
-		switch (MobileControls.mode)
-		{
-			case 'Pad-Right' | 'Pad-Left' | 'Pad-Custom':
-				controls.setVirtualPadNOTES(mobileControls.virtualPad, RIGHT_FULL, NONE);
-			case 'Pad-Duo':
-				controls.setVirtualPadNOTES(mobileControls.virtualPad, BOTH_FULL, NONE);
-			case 'Hitbox':
-				controls.setHitBox(mobileControls.hitbox);
-			case 'Keyboard': // do nothing
-		}
-
-		trackedInputsMobileControls = controls.trackedInputsNOTES;
+		controls.setHitBox(hitbox);
+		trackedInputsHitbox = controls.trackedInputsNOTES;
 		controls.trackedInputsNOTES = [];
-
-		var camControls:FlxCamera = new FlxCamera();
-		FlxG.cameras.add(camControls, DefaultDrawTarget);
-		camControls.bgColor.alpha = 0;
-
-		mobileControls.cameras = [camControls];
-		mobileControls.visible = false;
-		add(mobileControls);
 	}
 
-	public function removeMobileControls()
+	public function addHitboxCamera(DefaultDrawTarget:Bool = true):Void
 	{
-		if (trackedInputsMobileControls.length > 0)
-			controls.removeVirtualControlsInput(trackedInputsMobileControls);
-
-		if (mobileControls != null)
-			remove(mobileControls);
-	}
-
-	public function addVirtualPadCamera(DefaultDrawTarget:Bool = true)
-	{
-		if (virtualPad != null)
+		if (hitbox != null)
 		{
 			var camControls:FlxCamera = new FlxCamera();
 			FlxG.cameras.add(camControls, DefaultDrawTarget);
 			camControls.bgColor.alpha = 0;
-			virtualPad.cameras = [camControls];
+			hitbox.cameras = [camControls];
 		}
+	}
+
+	public function removeHitbox():Void
+	{
+		if (trackedInputsHitbox.length > 0)
+			controls.removeVirtualControlsInput(trackedInputsHitbox);
+
+		if (hitbox != null)
+			remove(hitbox);
 	}
 	#end
 
 	override function destroy()
 	{
 		#if mobile
-		if (trackedInputsMobileControls.length > 0)
-			controls.removeVirtualControlsInput(trackedInputsMobileControls);
+		if (trackedInputsHitbox.length > 0)
+			controls.removeVirtualControlsInput(trackedInputsHitbox);
 
 		if (trackedInputsVirtualPad.length > 0)
 			controls.removeVirtualControlsInput(trackedInputsVirtualPad);
@@ -448,95 +448,18 @@ Add
 		if (virtualPad != null)
 			virtualPad = FlxDestroyUtil.destroy(virtualPad);
 
-		if (mobileControls != null)
-			mobileControls = FlxDestroyUtil.destroy(mobileControls);
-		#end
-	}
-```
-
-6. Setup MusicBeatSubstate.hx
-
-In the lines you import things add
-```haxe
-#if mobile
-import mobile.flixel.FlxVirtualPad;
-import flixel.FlxCamera;
-import flixel.input.actions.FlxActionInput;
-import flixel.util.FlxDestroyUtil;
-#end
-```
-
-After these lines
-```haxe
-inline function get_controls():Controls
-	return PlayerSettings.player1.controls;
-```
-
-Add
-```haxe
-	#if mobile
-	var virtualPad:FlxVirtualPad;
-	var trackedInputsVirtualPad:Array<FlxActionInput> = [];
-
-	public function addVirtualPad(DPad:FlxDPadMode, Action:FlxActionMode)
-	{
-		if (virtualPad != null)
-			removeVirtualPad();
-
-		virtualPad = new FlxVirtualPad(DPad, Action);
-		add(virtualPad);
-
-		controls.setVirtualPadUI(virtualPad, DPad, Action);
-		trackedInputsVirtualPad = controls.trackedInputsUI;
-		controls.trackedInputsUI = [];
-	}
-
-	public function removeVirtualPad()
-	{
-		if (trackedInputsVirtualPad.length > 0)
-			controls.removeVirtualControlsInput(trackedInputsVirtualPad);
-
-		if (virtualPad != null)
-			remove(virtualPad);
-	}
-
-	public function addVirtualPadCamera(DefaultDrawTarget:Bool = true)
-	{
-		if (virtualPad != null)
-		{
-			var camControls:FlxCamera = new FlxCamera();
-			FlxG.cameras.add(camControls, DefaultDrawTarget);
-			camControls.bgColor.alpha = 0;
-			virtualPad.cameras = [camControls];
-		}
-	}
-	#end
-
-	override function destroy()
-	{
-		#if mobile
-		if (trackedInputsVirtualPad.length > 0)
-			controls.removeVirtualControlsInput(trackedInputsVirtualPad);
-		#end
-
-		super.destroy();
-
-		#if mobile
-		if (virtualPad != null)
-			virtualPad = FlxDestroyUtil.destroy(virtualPad);
+		if (hitbox != null)
+			hitbox = FlxDestroyUtil.destroy(hitbox);
 		#end
 	}
 ```
 
 And somehow you finished adding the android controls to your mod now on every state/substate add
 ```haxe
+
+//if you want to add the vpad to a state
 #if mobile
 addVirtualPad(LEFT_FULL, A_B);
-#end
-
-//if you want to remove it at some moment use
-#if mobile
-removeVirtualPad();
 #end
 
 //if you want it to have a camera
@@ -544,29 +467,24 @@ removeVirtualPad();
 addVirtualPadCamera();
 #end
 
-//in states, these need to be added before super.create();
-//in substates, in fuction new at the last line add these
-
-//on Playstate.hx after all of the
-//obj.cameras = [...];
-//things, add
+//if you want to remove it at some moment use
 #if mobile
-addMobileControls();
+removeVirtualPad();
+#end
+
+//if you want to add the hitbox to a state
+#if mobile
+addHitbox();
+#end
+
+//if you want it to have a camera
+#if mobile
+addHitboxCamera();
 #end
 
 //if you want to remove it at some moment use
 #if mobile
-removeMobileControls();
-#end
-
-//to make the controls visible the code is
-#if mobile
-mobileControls.visible = true;
-#end
-
-//to make the controls invisible the code is
-#if mobile
-mobileControls.visible = false;
+removeHitbox();
 #end
 ```
 

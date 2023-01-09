@@ -22,14 +22,14 @@ class FlxHitbox extends FlxSpriteGroup
 	/**
 	 * Create the zone.
 	 */
-	public function new()
+	public function new():Void
 	{
 		super();
 
-		add(buttonLeft = createHint(0, 0, 0, 0, 0xFF00FF));
-		add(buttonDown = createHint(FlxG.width / 4, 0, 0, 0, 0x00FFFF));
-		add(buttonUp = createHint(FlxG.width / 2, 0, 0, 0, 0x00FF00));
-		add(buttonRight = createHint((FlxG.width / 2) + (FlxG.width / 4), 0, 0, 0, 0xFF0000));
+		add(buttonLeft = createHint(0, 0, Std.int(FlxG.width / 4), FlxG.height, 0xFF00FF));
+		add(buttonDown = createHint(FlxG.width / 4, 0, Std.int(FlxG.width / 4), FlxG.height, 0x00FFFF));
+		add(buttonUp = createHint(FlxG.width / 2, 0, Std.int(FlxG.width / 4), FlxG.height, 0x00FF00));
+		add(buttonRight = createHint((FlxG.width / 2) + (FlxG.width / 4), 0, Std.int(FlxG.width / 4), FlxG.height, 0xFF0000));
 
 		scrollFactor.set();
 	}
@@ -37,7 +37,7 @@ class FlxHitbox extends FlxSpriteGroup
 	/**
 	 * Clean up memory.
 	 */
-	override function destroy()
+	override function destroy():Void
 	{
 		super.destroy();
 
@@ -62,37 +62,21 @@ class FlxHitbox extends FlxSpriteGroup
 
 	private function createHint(X:Float, Y:Float, Width:Int, Height:Int, Color:Int = 0xFFFFFF):FlxButton
 	{
-		if (Width == 0)
-			Width = Std.int(FlxG.width / 4);
-
-		if (Height == 0)
-			Height = FlxG.height;
-
 		var hint:FlxButton = new FlxButton(X, Y);
 		hint.loadGraphic(createHintGraphic(Width, Height, Color));
 		hint.solid = false;
 		hint.immovable = true;
 		hint.scrollFactor.set();
 		hint.alpha = 0.00001;
-		hint.onDown.callback = function()
+		hint.onDown.callback = hint.onOver.callback = function()
 		{
 			if (hint.alpha != 0.2)
 				hint.alpha = 0.2;
 		}
-		hint.onUp.callback = function()
+		hint.onUp.callback = hint.onOut.callback = function()
 		{
 			if (hint.alpha != 0.00001)
 				hint.alpha = 0.00001;
-		}
-		hint.onOut.callback = function()
-		{
-			if (hint.alpha != 0.00001)
-				hint.alpha = 0.00001;
-		}
-		hint.onOver.callback = function()
-		{
-			if (hint.alpha != 0.2)
-				hint.alpha = 0.2;
 		}
 		#if FLX_DEBUG
 		hint.ignoreDrawDebug = true;
