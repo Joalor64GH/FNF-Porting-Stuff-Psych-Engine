@@ -2,12 +2,11 @@ package mobile.flixel;
 
 import flixel.FlxG;
 import flixel.graphics.FlxGraphic;
-import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.graphics.frames.FlxTileFrames;
 import flixel.group.FlxSpriteGroup;
 import flixel.math.FlxPoint;
+import flixel.util.FlxDestroyUtil;
 import mobile.flixel.FlxButton;
-import openfl.display.BitmapData;
 import openfl.utils.Assets;
 
 enum FlxDPadMode
@@ -17,7 +16,6 @@ enum FlxDPadMode
 	UP_LEFT_RIGHT;
 	LEFT_FULL;
 	RIGHT_FULL;
-	BOTH_FULL;
 	NONE;
 }
 
@@ -27,7 +25,6 @@ enum FlxActionMode
 	B;
 	A_B;
 	A_B_C;
-	A_B_E;
 	A_B_X_Y;
 	A_B_C_X_Y;
 	A_B_C_X_Y_Z;
@@ -48,12 +45,6 @@ class FlxVirtualPad extends FlxSpriteGroup
 	public var buttonUp:FlxButton = new FlxButton(0, 0);
 	public var buttonRight:FlxButton = new FlxButton(0, 0);
 	public var buttonDown:FlxButton = new FlxButton(0, 0);
-
-	public var buttonLeft2:FlxButton = new FlxButton(0, 0);
-	public var buttonUp2:FlxButton = new FlxButton(0, 0);
-	public var buttonRight2:FlxButton = new FlxButton(0, 0);
-	public var buttonDown2:FlxButton = new FlxButton(0, 0);
-
 	public var buttonA:FlxButton = new FlxButton(0, 0);
 	public var buttonB:FlxButton = new FlxButton(0, 0);
 	public var buttonC:FlxButton = new FlxButton(0, 0);
@@ -96,15 +87,6 @@ class FlxVirtualPad extends FlxSpriteGroup
 				add(buttonLeft = createButton(FlxG.width - 384, FlxG.height - 309, 'left', 0xFF00FF));
 				add(buttonRight = createButton(FlxG.width - 132, FlxG.height - 309, 'right', 0xFF0000));
 				add(buttonDown = createButton(FlxG.width - 258, FlxG.height - 201, 'down', 0x00FFFF));
-			case BOTH_FULL:
-				add(buttonUp = createButton(105, FlxG.height - 345, 'up', 0x00FF00));
-				add(buttonLeft = createButton(0, FlxG.height - 243, 'left', 0xFF00FF));
-				add(buttonRight = createButton(207, FlxG.height - 243, 'right', 0xFF0000));
-				add(buttonDown = createButton(105, FlxG.height - 135, 'down', 0x00FFFF));
-				add(buttonUp2 = createButton(FlxG.width - 258, FlxG.height - 408, 'up', 0x00FF00));
-				add(buttonLeft2 = createButton(FlxG.width - 384, FlxG.height - 309, 'left', 0xFF00FF));
-				add(buttonRight2 = createButton(FlxG.width - 132, FlxG.height - 309, 'right', 0xFF0000));
-				add(buttonDown2 = createButton(FlxG.width - 258, FlxG.height - 201, 'down', 0x00FFFF));
 			case NONE: // do nothing
 		}
 
@@ -119,10 +101,6 @@ class FlxVirtualPad extends FlxSpriteGroup
 				add(buttonA = createButton(FlxG.width - 132, FlxG.height - 135, 'a', 0xFF0000));
 			case A_B_C:
 				add(buttonC = createButton(FlxG.width - 384, FlxG.height - 135, 'c', 0x44FF00));
-				add(buttonB = createButton(FlxG.width - 258, FlxG.height - 135, 'b', 0xFFCB00));
-				add(buttonA = createButton(FlxG.width - 132, FlxG.height - 135, 'a', 0xFF0000));
-			case A_B_E:
-				add(buttonE = createButton(FlxG.width - 384, FlxG.height - 135, 'e', 0xFF7D00));
 				add(buttonB = createButton(FlxG.width - 258, FlxG.height - 135, 'b', 0xFFCB00));
 				add(buttonA = createButton(FlxG.width - 132, FlxG.height - 135, 'a', 0xFF0000));
 			case A_B_X_Y:
@@ -165,38 +143,32 @@ class FlxVirtualPad extends FlxSpriteGroup
 	{
 		super.destroy();
 
-		buttonLeft = null;
-		buttonUp = null;
-		buttonDown = null;
-		buttonRight = null;
-
-		buttonLeft2 = null;
-		buttonUp2 = null;
-		buttonDown2 = null;
-		buttonRight2 = null;
-
-		buttonA = null;
-		buttonB = null;
-		buttonC = null;
-		buttonD = null;
-		buttonE = null;
-		buttonV = null;
-		buttonX = null;
-		buttonY = null;
-		buttonZ = null;
+		buttonLeft = FlxDestroyUtil.destroy(buttonLeft);
+		buttonUp = FlxDestroyUtil.destroy(buttonUp);
+		buttonDown = FlxDestroyUtil.destroy(buttonDown);
+		buttonRight = FlxDestroyUtil.destroy(buttonRight);
+		buttonA = FlxDestroyUtil.destroy(buttonA);
+		buttonB = FlxDestroyUtil.destroy(buttonB);
+		buttonC = FlxDestroyUtil.destroy(buttonC);
+		buttonD = FlxDestroyUtil.destroy(buttonD);
+		buttonE = FlxDestroyUtil.destroy(buttonE);
+		buttonV = FlxDestroyUtil.destroy(buttonV);
+		buttonX = FlxDestroyUtil.destroy(buttonX);
+		buttonY = FlxDestroyUtil.destroy(buttonY);
+		buttonZ = FlxDestroyUtil.destroy(buttonZ);
 	}
 
 	private function createButton(X:Float, Y:Float, Graphic:String, Color:Int = 0xFFFFFF):FlxButton
 	{
-		var bitmapData:BitmapData;
+		var graphic:FlxGraphic;
 
 		if (Assets.exists('assets/mobile/virtualpad/${Graphic}.png'))
-			bitmapData = Assets.getBitmapData('assets/mobile/virtualpad/${Graphic}.png');
+			graphic = FlxG.bitmap.add('assets/mobile/virtualpad/${Graphic}.png');
 		else
-			bitmapData = Assets.getBitmapData('assets/mobile/virtualpad/default.png');
+			graphic = FlxG.bitmap.add('assets/mobile/virtualpad/default.png');
 
 		var button:FlxButton = new FlxButton(X, Y);
-		button.frames = FlxTileFrames.fromGraphic(FlxGraphic.fromBitmapData(bitmapData), FlxPoint.get(Std.int(bitmapData.width / 3), bitmapData.height));
+		button.frames = FlxTileFrames.fromGraphic(graphic, FlxPoint.get(Std.int(graphic.width / 3), graphic.height));
 		button.solid = false;
 		button.immovable = true;
 		button.scrollFactor.set();
