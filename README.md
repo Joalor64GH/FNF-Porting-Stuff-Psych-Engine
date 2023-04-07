@@ -1,12 +1,13 @@
-# FNF-Android-Porting:
+# FNF-Mobile-Porting
 
-The things im using when i port a mod to android
+The things im using when i port a mod to mobile
 
 **This should be used for the FNF 0.2.8 update and engines that have this version of FNF**
 
-### PC compile instructions For Android:
+<details>
+  <summary>Windows Compile Instructions for Android</summary>
+1.
 
-1. Download
 * [JDK](https://www.oracle.com/java/technologies/downloads/#java11) - Download the version `11` of it
 * [Android Studio](https://developer.android.com/studio) - I recomend you to download the latest version
 * [NDK](https://developer.android.com/ndk/downloads/older_releases?hl=fi) - Download the version `r21e` (This is the version recomended by Lime)
@@ -22,12 +23,13 @@ Unzip the NDK (the NDK does not need to be installed because its a zip archive)
 
 5. Open project in CMD/PowerShell `cd (path to fnf source)`
 And run command `lime build android -final`
-The apk will be generated in this path (path to source)\export\release\android\bin\app\build\outputs\apk\debug
-_____________________________________
+The apk will be generated in this path (path to source)`\export\release\android\bin\app\build\outputs\apk\debug`
 
-## Instructions:
+</details>
 
-1. You Need to install extension-androidtools
+## Instructions
+
+1. You Need to install `extension-androidtools`
 
 To Install it You Need To Open Command prompt/PowerShell And Type
 ```cmd
@@ -36,7 +38,7 @@ haxelib git extension-androidtools https://github.com/jigsaw-4277821/extension-a
 
 2. Download the repository code and paste it in your source code folder
 
-3. You Need to add these things in project.xml
+3. You Need to add these things in `Project.xml`
 
 On This Line
 ```xml
@@ -62,17 +64,22 @@ Then, After the Libraries, or where the packeges are located add
 
 Add
 ```xml
+	<!--Allow working memory greater than 1 Gig-->
+	<haxedef name="HXCPP_GC_BIG_BLOCKS" />
+
 	<!--Always enable Null Object Reference check-->
 	<haxedef name="HXCPP_CHECK_POINTER" />
 	<haxedef name="HXCPP_STACK_LINE" />
 	<haxedef name="HXCPP_STACK_TRACE" />
 
 	<section if="android">
-		<!--Gradle-->
-		<config:android gradle-version="7.4.2" gradle-plugin="7.3.1" />
+		<config>
+			<!--Gradle-->
+			<android gradle-version="7.4.2" gradle-plugin="7.3.1" />
 
-		<!--Target SDK-->
-		<config:android target-sdk-version="29" if="${lime < 8.1.0}" />
+			<!--Target SDK-->
+			<android target-sdk-version="29" if="${lime &lt; 8.1.0}" />
+		</config>
 	</section>
 
 	<section if="ios">
@@ -113,30 +120,42 @@ Add
 	public var trackedInputsUI:Array<FlxActionInput> = [];
 	public var trackedInputsNOTES:Array<FlxActionInput> = [];
 
-	public function addButtonNOTES(action:FlxActionDigital, button:FlxButton, state:FlxInputState)
+	public function addButtonNOTES(action:FlxActionDigital, button:FlxButton, state:FlxInputState):Void
 	{
+		if (button == null)
+			return;
+
 		var input:FlxActionInputDigitalIFlxInput = new FlxActionInputDigitalIFlxInput(button, state);
 		trackedInputsNOTES.push(input);
 		action.add(input);
 	}
 
-	public function addButtonUI(action:FlxActionDigital, button:FlxButton, state:FlxInputState)
+	public function addButtonUI(action:FlxActionDigital, button:FlxButton, state:FlxInputState):Void
 	{
+		if (button == null)
+			return;
+
 		var input:FlxActionInputDigitalIFlxInput = new FlxActionInputDigitalIFlxInput(button, state);
 		trackedInputsUI.push(input);
 		action.add(input);
 	}
 
-	public function setHitBox(Hitbox:FlxHitbox)
+	public function setHitBox(Hitbox:FlxHitbox):Void
 	{
+		if (Hitbox == null)
+			return;
+
 		inline forEachBound(Control.NOTE_UP, (action, state) -> addButtonNOTES(action, Hitbox.buttonUp, state));
 		inline forEachBound(Control.NOTE_DOWN, (action, state) -> addButtonNOTES(action, Hitbox.buttonDown, state));
 		inline forEachBound(Control.NOTE_LEFT, (action, state) -> addButtonNOTES(action, Hitbox.buttonLeft, state));
 		inline forEachBound(Control.NOTE_RIGHT, (action, state) -> addButtonNOTES(action, Hitbox.buttonRight, state));
 	}
 
-	public function setVirtualPadUI(VirtualPad:FlxVirtualPad, DPad:FlxDPadMode, Action:FlxActionMode)
+	public function setVirtualPadUI(VirtualPad:FlxVirtualPad, DPad:FlxDPadMode, Action:FlxActionMode):Void
 	{
+		if (VirtualPad == null)
+			return;
+
 		switch (DPad)
 		{
 			case UP_DOWN:
@@ -154,7 +173,7 @@ Add
 				inline forEachBound(Control.UI_DOWN, (action, state) -> addButtonUI(action, VirtualPad.buttonDown, state));
 				inline forEachBound(Control.UI_LEFT, (action, state) -> addButtonUI(action, VirtualPad.buttonLeft, state));
 				inline forEachBound(Control.UI_RIGHT, (action, state) -> addButtonUI(action, VirtualPad.buttonRight, state));
-			case NONE: // do nothing
+			case BLANK: // do nothing
 		}
 
 		switch (Action)
@@ -166,12 +185,15 @@ Add
 			case A_B | A_B_C | A_B_X_Y | A_B_C_X_Y | A_B_C_X_Y_Z | A_B_C_D_V_X_Y_Z:
 				inline forEachBound(Control.ACCEPT, (action, state) -> addButtonUI(action, VirtualPad.buttonA, state));
 				inline forEachBound(Control.BACK, (action, state) -> addButtonUI(action, VirtualPad.buttonB, state));
-			case NONE: // do nothing
+			case BLANK: // do nothing
 		}
 	}
 
-	public function setVirtualPadNOTES(VirtualPad:FlxVirtualPad, DPad:FlxDPadMode, Action:FlxActionMode)
+	public function setVirtualPadNOTES(VirtualPad:FlxVirtualPad, DPad:FlxDPadMode, Action:FlxActionMode):Void
 	{
+		if (VirtualPad == null)
+			return;
+
 		switch (DPad)
 		{
 			case UP_DOWN:
@@ -189,7 +211,7 @@ Add
 				inline forEachBound(Control.NOTE_DOWN, (action, state) -> addButtonNOTES(action, VirtualPad.buttonDown, state));
 				inline forEachBound(Control.NOTE_LEFT, (action, state) -> addButtonNOTES(action, VirtualPad.buttonLeft, state));
 				inline forEachBound(Control.NOTE_RIGHT, (action, state) -> addButtonNOTES(action, VirtualPad.buttonRight, state));
-			case NONE: // do nothing
+			case BLANK: // do nothing
 		}
 
 		switch (Action)
@@ -201,11 +223,11 @@ Add
 			case A_B | A_B_C | A_B_X_Y | A_B_C_X_Y | A_B_C_X_Y_Z | A_B_C_D_V_X_Y_Z:
 				inline forEachBound(Control.ACCEPT, (action, state) -> addButtonNOTES(action, VirtualPad.buttonA, state));
 				inline forEachBound(Control.BACK, (action, state) -> addButtonNOTES(action, VirtualPad.buttonB, state));
-			case NONE: // do nothing
+			case BLANK: // do nothing
 		}
 	}
 
-	public function removeVirtualControlsInput(Tinputs:Array<FlxActionInput>)
+	public function removeVirtualControlsInput(Tinputs:Array<FlxActionInput>):Void
 	{
 		for (action in this.digitalActions)
 		{
@@ -221,88 +243,6 @@ Add
 			}
 		}
 	}
-	#end
-```
-
-And replace these lines (you can skip this if the mod isn't on psych engine)
-```haxe
-	public function bindKeys(control:Control, keys:Array<FlxKey>)
-	{
-		var copyKeys:Array<FlxKey> = keys.copy();
-		for (i in 0...copyKeys.length) {
-			if(i == NONE) copyKeys.remove(i);
-		}
-
-		#if (haxe >= "4.0.0")
-		inline forEachBound(control, (action, state) -> addKeys(action, copyKeys, state));
-		#else
-		forEachBound(control, function(action, state) addKeys(action, copyKeys, state));
-		#end
-	}
-
-	public function unbindKeys(control:Control, keys:Array<FlxKey>)
-	{
-		var copyKeys:Array<FlxKey> = keys.copy();
-		for (i in 0...copyKeys.length) {
-			if(i == NONE) copyKeys.remove(i);
-		}
-
-		#if (haxe >= "4.0.0")
-		inline forEachBound(control, (action, _) -> removeKeys(action, copyKeys));
-		#else
-		forEachBound(control, function(action, _) removeKeys(action, copyKeys));
-		#end
-	}
-```
-
-With
-```haxe
-	#if !mobile
-	public function bindKeys(control:Control, keys:Array<FlxKey>)
-	{
-		var copyKeys:Array<FlxKey> = keys.copy();
-		for (i in 0...copyKeys.length)
-			if(i == NONE)
-				copyKeys.remove(i);
-
-		#if (haxe >= "4.0.0")
-		inline forEachBound(control, (action, state) -> addKeys(action, copyKeys, state));
-		#else
-		forEachBound(control, function(action, state) addKeys(action, copyKeys, state));
-		#end
-	}
-
-	public function unbindKeys(control:Control, keys:Array<FlxKey>)
-	{
-		var copyKeys:Array<FlxKey> = keys.copy();
-		for (i in 0...copyKeys.length)
-			if(i == NONE)
-				copyKeys.remove(i);
-
-		#if (haxe >= "4.0.0")
-		inline forEachBound(control, (action, _) -> removeKeys(action, copyKeys));
-		#else
-		forEachBound(control, function(action, _) removeKeys(action, copyKeys));
-		#end
-	}
-	#else
-	public function bindKeys(control:Control, keys:Array<FlxKey>)
-	{
-		#if (haxe >= "4.0.0")
-		inline forEachBound(control, (action, state) -> addKeys(action, keys, state));
-		#else
-		forEachBound(control, function(action, state) addKeys(action, keys, state));
-		#end
-	}
-
-	public function unbindKeys(control:Control, keys:Array<FlxKey>)
-	{
-		#if (haxe >= "4.0.0")
-		inline forEachBound(control, (action, _) -> removeKeys(action, keys));
-		#else
-		forEachBound(control, function(action, _) removeKeys(action, keys));
-		#end
-	}	
 	#end
 ```
 
@@ -333,7 +273,7 @@ Add
 	var trackedInputsHitbox:Array<FlxActionInput> = [];
 	var trackedInputsVirtualPad:Array<FlxActionInput> = [];
 
-	public function addVirtualPad(DPad:FlxDPadMode, Action:FlxActionMode, ?visible = true):Void
+	public function addVirtualPad(DPad:FlxDPadMode, Action:FlxActionMode, visible:Bool = true):Void
 	{
 		if (virtualPad != null)
 			removeVirtualPad();
@@ -352,8 +292,8 @@ Add
 		if (virtualPad != null)
 		{
 			var camControls:FlxCamera = new FlxCamera();
-			FlxG.cameras.add(camControls, DefaultDrawTarget);
 			camControls.bgColor.alpha = 0;
+			FlxG.cameras.add(camControls, DefaultDrawTarget);
 			virtualPad.cameras = [camControls];
 		}
 	}
@@ -367,7 +307,7 @@ Add
 			remove(virtualPad);
 	}
 
-	public function addHitbox(?visible = true):Void
+	public function addHitbox(visible:Bool = true):Void
 	{
 		if (hitbox != null)
 			removeHitbox();
@@ -386,8 +326,8 @@ Add
 		if (hitbox != null)
 		{
 			var camControls:FlxCamera = new FlxCamera();
-			FlxG.cameras.add(camControls, DefaultDrawTarget);
 			camControls.bgColor.alpha = 0;
+			FlxG.cameras.add(camControls, DefaultDrawTarget);
 			hitbox.cameras = [camControls];
 		}
 	}
@@ -402,7 +342,7 @@ Add
 	}
 	#end
 
-	override function destroy()
+	override function destroy():Void
 	{
 		#if mobile
 		if (trackedInputsHitbox.length > 0)
@@ -434,7 +374,7 @@ addVirtualPad(LEFT_FULL, A_B);
 
 //if you want it to have a camera
 #if mobile
-addVirtualPadCamera();
+addVirtualPadCamera(); // add false into () if isn't the default draw camera...
 #end
 
 //if you want to remove it at some moment use
@@ -449,7 +389,7 @@ addHitbox();
 
 //if you want it to have a camera
 #if mobile
-addHitboxCamera();
+addHitboxCamera(); // add false into () if isn't the default draw camera...
 #end
 
 //if you want to remove it at some moment use
@@ -532,11 +472,6 @@ for (touch in FlxG.touches.list)
 		justTouched = true;
 
 if (justTouched)
-	//Your code
+	// Your code
 #end
 ```
-
-## Credits:
-* Saw (M.A. JIGSAW) me - Doing the rest of the code, utils, pad buttons and other things
-* luckydog7 - Original code for mobile controls and hitbox graphic shape original code.
-* Goldie - Pad designer.

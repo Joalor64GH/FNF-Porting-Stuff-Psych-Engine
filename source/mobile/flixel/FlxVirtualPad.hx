@@ -16,7 +16,7 @@ enum FlxDPadMode
 	UP_LEFT_RIGHT;
 	LEFT_FULL;
 	RIGHT_FULL;
-	NONE;
+	BLANK;
 }
 
 enum FlxActionMode
@@ -29,7 +29,7 @@ enum FlxActionMode
 	A_B_C_X_Y;
 	A_B_C_X_Y_Z;
 	A_B_C_D_V_X_Y_Z;
-	NONE;
+	BLANK;
 }
 
 /**
@@ -61,7 +61,7 @@ class FlxVirtualPad extends FlxSpriteGroup
 	 * @param   DPadMode     The D-Pad mode. `LEFT_FULL` for example.
 	 * @param   ActionMode   The action buttons mode. `A_B_C` for example.
 	 */
-	public function new(DPad:FlxDPadMode, Action:FlxActionMode)
+	public function new(DPad:FlxDPadMode, Action:FlxActionMode):Void
 	{
 		super();
 
@@ -87,7 +87,7 @@ class FlxVirtualPad extends FlxSpriteGroup
 				add(buttonLeft = createButton(FlxG.width - 384, FlxG.height - 309, 'left', 0xFF00FF));
 				add(buttonRight = createButton(FlxG.width - 132, FlxG.height - 309, 'right', 0xFF0000));
 				add(buttonDown = createButton(FlxG.width - 258, FlxG.height - 201, 'down', 0x00FFFF));
-			case NONE: // do nothing
+			case BLANK: // do nothing
 		}
 
 		switch (Action)
@@ -130,7 +130,7 @@ class FlxVirtualPad extends FlxSpriteGroup
 				add(buttonB = createButton(FlxG.width - 258, FlxG.height - 135, 'b', 0xFFCB00));
 				add(buttonZ = createButton(FlxG.width - 132, FlxG.height - 255, 'z', 0xCCB98E));
 				add(buttonA = createButton(FlxG.width - 132, FlxG.height - 135, 'a', 0xFF0000));
-			case NONE: // do nothing
+			case BLANK: // do nothing
 		}
 
 		scrollFactor.set();
