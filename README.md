@@ -84,8 +84,7 @@ Add
 
 	<section if="ios">
 		<!--Dependency--> 
-		<dependency name="Metal.framework" />
-		<dependency name="WebKit.framework" />
+		<dependency name="Metal.framework" if="${lime &lt; 8.0.0}" />
 	</section>
 ```
 
@@ -364,7 +363,7 @@ Add
 	}
 ```
 
-And somehow you finished adding the android controls to your mod now on every state/substate add
+And somehow you finished adding the mobile controls to your mod now on every state/substate add
 ```haxe
 
 //if you want to add the vpad to a state
